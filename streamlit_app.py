@@ -804,15 +804,24 @@ def compare(df_wings: pd.DataFrame, sam_map: dict) -> pd.DataFrame:
         # Look up SAM codes using normalized model
         sam_codes = sam_map.get(model_norm, set())
 
-        # If no exact match, try relaxed matching: ignore spaces/suffix differences
+        # If no exact match, try relaxed matching: numeric prefix must match AND letter suffix must match
         if not sam_codes:
+            def _split_model(s: str):
+                # split into leading digits and trailing letters e.g. '3253K' -> ('3253', 'K')
+                m = re.match(r'^(\d+)([A-Z]*)$', s)
+                if m:
+                    return m.group(1), m.group(2)
+                return s, ''
+
+            num_norm, suf_norm = _split_model(model_norm)
             for k, v in sam_map.items():
                 try:
                     k_norm = _normalize_model(k)
                 except Exception:
                     k_norm = _normalize_model(str(k))
-                # compare first 4 digits and overall normalized form
-                if k_norm == model_norm or (len(k_norm) >= 4 and len(model_norm) >= 4 and (k_norm[:4] == model_norm[:4])):
+                num_k, suf_k = _split_model(k_norm)
+                # numeric prefixes must match AND suffixes must match (both empty counts as match)
+                if k_norm == model_norm or (num_k == num_norm and suf_k == suf_norm):
                     sam_codes = v
                     break
 
