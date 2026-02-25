@@ -722,26 +722,40 @@ def _parse_single_sam_file(file_obj, name: str, mapping: dict, log_fn=None):
                 xml_content = z.read('word/document.xml')
             root = ET.fromstring(xml_content)
 
+            W = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
+
             full_text = "".join(
-                t.text for t in root.iter('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t')
-                if t.text
+                t.text for t in root.iter(f'{W}t') if t.text
             )
 
-            # Find equipment section start
-            for marker in ('Equipment overview', 'Standard equipment'):
-                if marker in full_text:
-                    eq_text = full_text.split(marker)[-1]
-                    break
-            else:
-                eq_text = full_text
-
-            eq_upper = eq_text.upper()
-            # Primary: semicolon-delimited codes (Standard + Special equipment boxes)
-            codes = set(re.findall(r'([A-Z][A-Z0-9]{2,4})\s*;', eq_upper))
-            # Secondary: Additional equipment section — any 3-4 char code before 2+ spaces (code + description format)
-            if 'ADDITIONAL EQUIPMENT' in eq_upper:
-                add_text = eq_upper.split('ADDITIONAL EQUIPMENT')[-1]
-                codes |= set(re.findall(r'\b([A-Z][A-Z0-9]{2,4})\b', add_text))
+            # Parse equipment codes from the equipment table cell-by-cell.
+            # This avoids capturing text outside the boxes (footers, descriptions, etc.)
+            codes = set()
+            for table in root.iter(f'{W}tbl'):
+                tbl_text = "".join(t.text or '' for t in table.iter(f'{W}t'))
+                if 'Standard equipment' not in tbl_text and 'Equipment overview' not in tbl_text:
+                    continue
+                # Found the equipment table — iterate paragraph by paragraph
+                section = None
+                for para in table.iter(f'{W}p'):
+                    para_text = "".join(t.text or '' for t in para.iter(f'{W}t')).strip()
+                    para_upper = para_text.upper()
+                    # Detect section headers (short label paragraphs)
+                    if para_upper in ('STANDARD EQUIPMENT', 'SPECIAL EQUIPMENT',
+                                      'ADDITIONAL EQUIPMENT', 'EQUIPMENT OVERVIEW'):
+                        section = para_upper
+                        continue
+                    if not para_text or section is None:
+                        continue
+                    if section in ('STANDARD EQUIPMENT', 'SPECIAL EQUIPMENT'):
+                        # Codes are semicolon-delimited within these boxes
+                        codes |= set(re.findall(r'([A-Z][A-Z0-9]{2,4})\s*;', para_upper))
+                    elif section == 'ADDITIONAL EQUIPMENT':
+                        # Each paragraph: first token = code, rest = description
+                        m = re.match(r'^([A-Z][A-Z0-9]{2,4})\b', para_upper)
+                        if m:
+                            codes.add(m.group(1))
+                break  # only process the first matching table
 
             for pattern in [
                 r'Vehicle type[:\s]+([0-9]{4}[A-Z]{1,3})',
