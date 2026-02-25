@@ -712,82 +712,85 @@ def _extract_variant_tokens(text: str, codes: set) -> set:
     return tokens
 
 
+def _parse_single_sam_file(file_obj, name: str, mapping: dict, log_fn=None):
+    """Parse one SAM file (file-like object) and update mapping in place."""
+    model_raw = None
+    codes = set()
+
+    try:
+        if name.lower().endswith('.docx'):
+            with zipfile.ZipFile(file_obj) as z:
+                xml_content = z.read('word/document.xml')
+            root = ET.fromstring(xml_content)
+
+            full_text = "".join(
+                t.text for t in root.iter('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t')
+                if t.text
+            )
+
+            codes_text = full_text.split('Standard equipment')[-1] if 'Standard equipment' in full_text else full_text
+            raw_codes = re.findall(r'\b[A-Z0-9]{3,4}\b', codes_text.upper())
+            codes = set(c for c in raw_codes if any(ch.isdigit() for ch in c))
+
+            for pattern in [
+                r'Vehicle type[:\s]+([0-9]{4}[A-Z]{1,3})',
+                r'Type[:\s]+([0-9]{4}[A-Z]{1,3})',
+                r'Model[:\s]+([0-9]{4}[A-Z]{1,3})',
+                r'Baumuster[:\s]+([0-9]{4}[A-Z]{1,3})'
+            ]:
+                m = re.search(pattern, full_text, re.IGNORECASE)
+                if m:
+                    model_raw = m.group(1).strip()
+                    break
+        else:
+            try:
+                raw = file_obj.read() if hasattr(file_obj, 'read') else file_obj.getvalue()
+                text = raw.decode('utf-8') if isinstance(raw, bytes) else str(raw)
+            except Exception:
+                text = ''
+            raw_codes = re.findall(r'\b[A-Z0-9]{3,4}\b', text.upper())
+            codes = set(c for c in raw_codes if any(ch.isdigit() for ch in c))
+    except Exception as e:
+        if log_fn:
+            log_fn(f'SAM 파일 읽기 오류 ({name}): {str(e)[:80]}')
+        return
+
+    if not model_raw:
+        fname_upper = name.upper()
+        m = re.search(r'(\d{4}[A-Z]{1,3}(?:[LSK])?)', fname_upper)
+        if m:
+            model_raw = m.group(1)
+
+    if model_raw and codes:
+        model_norm = _normalize_model(model_raw)
+        if model_norm:
+            mapping.setdefault(model_norm, set()).update(codes)
+            if log_fn:
+                log_fn(f"✓ '{name}' → 모델 '{model_norm}' ({len(codes)} 코드)")
+
+
+def load_sam_from_folder(folder: Path) -> dict:
+    """Load all SAM .docx/.csv files from a local folder; return {normalized_model: set(codes)}"""
+    mapping = {}
+    files = sorted(folder.glob('*'))
+    valid_exts = {'.docx', '.csv', '.txt'}
+    sam_files = [f for f in files if f.suffix.lower() in valid_exts and not f.name.startswith('.')]
+    for fpath in sam_files:
+        with open(fpath, 'rb') as fobj:
+            _parse_single_sam_file(fobj, fpath.name, mapping)
+    return mapping
+
+
 def parse_sam_docx(uploaded_files) -> dict:
     """Parse SAM .docx files using XML extraction; return {normalized_model: set(codes)}"""
     mapping = {}
-    
+
+    def _log(msg):
+        st.write(msg)
+
     for up in uploaded_files:
-        name = up.name
-        model_raw = None
-        codes = set()
-        
-        try:
-            # Read .docx as zip and extract XML
-            if name.lower().endswith('.docx'):
-                with zipfile.ZipFile(up) as z:
-                    xml_content = z.read('word/document.xml')
-                root = ET.fromstring(xml_content)
-                
-                # Extract all text from XML
-                full_text = "".join(
-                    t.text for t in root.iter('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t')
-                    if t.text
-                )
-                
-                # Extract option codes AFTER "Standard equipment" section only
-                if 'Standard equipment' in full_text:
-                    codes_text = full_text.split('Standard equipment')[-1]
-                else:
-                    codes_text = full_text
-                
-                # Extract 3-4 char codes but filter out pure alphabetic (like WITH, NOT)
-                # Option codes must contain at least one digit
-                raw_codes = re.findall(r'\b[A-Z0-9]{3,4}\b', codes_text.upper())
-                codes = set(c for c in raw_codes if any(ch.isdigit() for ch in c))
-                
-                # Try to extract model from XML text (Vehicle type, Type, Model, Baumuster)
-                for pattern in [
-                    r'Vehicle type[:\s]+([0-9]{4}[A-Z]{1,3})',
-                    r'Type[:\s]+([0-9]{4}[A-Z]{1,3})',
-                    r'Model[:\s]+([0-9]{4}[A-Z]{1,3})',
-                    r'Baumuster[:\s]+([0-9]{4}[A-Z]{1,3})'
-                ]:
-                    m = re.search(pattern, full_text, re.IGNORECASE)
-                    if m:
-                        model_raw = m.group(1).strip()
-                        break
-            else:
-                # CSV or TXT files
-                try:
-                    text = up.getvalue().decode('utf-8')
-                except Exception:
-                    text = str(up.getvalue())
-                
-                # Extract 3-4 char codes but require at least one digit
-                raw_codes = re.findall(r'\b[A-Z0-9]{3,4}\b', text.upper())
-                codes = set(c for c in raw_codes if any(ch.isdigit() for ch in c))
-        
-        except Exception as e:
-            st.warning(f'SAM 파일 읽기 오류 ({name}): {str(e)[:50]}')
-            continue
-        
-        # If model not found in XML, extract from filename
-        if not model_raw:
-            # Pattern: extract 4-digit+letters from filename (e.g., "3353S", "2851LS")
-            fname_upper = name.upper()
-            m = re.search(r'(\d{4}[A-Z]{1,3}(?:[LSK])?)', fname_upper)
-            if m:
-                model_raw = m.group(1)
-        
-        # Normalize and store
-        if model_raw and codes:
-            model_norm = _normalize_model(model_raw)
-            if model_norm:
-                if model_norm not in mapping:
-                    mapping[model_norm] = set()
-                mapping[model_norm].update(codes)
-                st.write(f"✓ SAM 파일 '{name}' → 모델 '{model_norm}' ({len(codes)} 코드)")
-    
+        _parse_single_sam_file(up, up.name, mapping, log_fn=_log)
+
     return mapping
 
 
@@ -988,23 +991,40 @@ def main():
 
     st.title('WINGS ↔ SAM 옵션 코드 비교 대시보드')
 
-    st.markdown('업로드: WINGS CSV/Excel 파일과 SAM `.docx` 또는 CSV 파일들을 업로드하세요.')
+    st.markdown('WINGS CSV/Excel 파일만 업로드하면 SAM 데이터와 자동으로 비교됩니다.')
+
+    # ── Auto-load SAM files from sam_files/ folder ───────────────────────────
+    sam_folder = Path('sam_files')
+    sam_folder.mkdir(exist_ok=True)
+
+    @st.cache_data(show_spinner=False)
+    def _cached_sam_map(folder_str: str, mtime_key: str) -> dict:
+        _ = mtime_key  # cache-busting key; triggers reload when files change
+        return load_sam_from_folder(Path(folder_str))
+
+    valid_exts = {'.docx', '.csv', '.txt'}
+    sam_file_paths = sorted(
+        p for p in sam_folder.glob('*')
+        if p.suffix.lower() in valid_exts and not p.name.startswith('.')
+    )
+    mtime_key = ','.join(f'{p.name}:{p.stat().st_mtime}' for p in sam_file_paths)
+    sam_map = _cached_sam_map(str(sam_folder), mtime_key)
+
+    if sam_map:
+        with st.expander(f'SAM 데이터 로드됨: {len(sam_map)}개 모델 ({len(sam_file_paths)}개 파일)', expanded=False):
+            for model, codes in sorted(sam_map.items()):
+                st.write(f'• **{model}** — {len(codes)} 코드')
+    else:
+        st.warning(
+            '`sam_files/` 폴더에 SAM .docx 파일이 없습니다. '
+            'GitHub 레포의 `sam_files/` 폴더에 파일을 추가하세요.'
+        )
 
     wings_file = st.file_uploader('WINGS CSV/Excel 파일', type=['csv', 'xlsx', 'xls'])
-    sam_files = st.file_uploader('SAM files (.docx/.csv) (여러개 가능)', type=['docx', 'csv', 'xlsx', 'txt'], accept_multiple_files=True)
-
-    if st.button('샘플로 데모 실행'):
-        # load embedded sample from attachments? Not available; show message
-        st.info('샘플 데모를 사용하려면 실제 파일을 업로드하세요.')
 
     if wings_file is not None:
         df_w = parse_wings(wings_file)
         st.success(f'WINGS 파일 읽음: {len(df_w)} 행')
-
-        sam_map = {}
-        if sam_files:
-            sam_map = parse_sam_docx(sam_files)
-            st.success(f'SAM 파일 읽음: {len(sam_map)} 모델')
 
         comp = compare(df_w, sam_map)
 
