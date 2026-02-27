@@ -1875,37 +1875,34 @@ def parse_wings(file) -> pd.DataFrame:
         st.warning('모델명 컬럼을 찾을 수 없습니다. Baumuster 컬럼이 모델명으로 사용됩니다.')
         model_col = df.columns[1] if len(df.columns) > 1 else 'Commission no.'
 
-    # Prefer explicit option code columns from WINGS export
+    # Prefer explicit option code columns from WINGS export (case-insensitive)
     wings_opt_col1 = None
     wings_opt_col2 = None
-    
+
     for col_name in df.columns:
-        if 'Standard' in col_name and 'equipment' in col_name:
+        col_lower = col_name.lower()
+        if 'standard' in col_lower and 'equipment' in col_lower:
             wings_opt_col1 = col_name
-        elif 'Additional' in col_name and 'equipment' in col_name:
+        elif 'additional' in col_lower and 'equipment' in col_lower:
             wings_opt_col2 = col_name
-    
-    # If explicit columns not found, try alternative names
-    if not wings_opt_col1 or not wings_opt_col2:
-        code_cols = []
+
+    # If neither column found by name, try positional approach
+    if not wings_opt_col1 and not wings_opt_col2:
         try:
             if df.shape[1] >= 11:
-                # 0-based: I -> 8, K -> 10
-                code_cols = [df.columns[8], df.columns[10]]
+                wings_opt_col1 = df.columns[8]
+                wings_opt_col2 = df.columns[10]
         except Exception:
             pass
-        
-        if code_cols:
-            wings_opt_col1, wings_opt_col2 = code_cols[0], code_cols[1]
-    
-    # Fallback if still no columns found
-    if not wings_opt_col1:
+
+    # Fallback: search by keyword for any still-missing column
+    if not wings_opt_col1 or not wings_opt_col2:
         for name in df.columns:
             low = name.lower()
             if 'equipment' in low or 'offer code' in low or 'enumeration' in low:
                 if wings_opt_col1 is None:
                     wings_opt_col1 = name
-                elif wings_opt_col2 is None:
+                elif wings_opt_col2 is None and name != wings_opt_col1:
                     wings_opt_col2 = name
                     break
 
