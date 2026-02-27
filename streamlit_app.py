@@ -2031,11 +2031,11 @@ def _parse_single_sam_file(file_obj, name: str, mapping: dict, log_fn=None):
                     if not para_text or section is None:
                         continue
                     if section in ('STANDARD EQUIPMENT', 'SPECIAL EQUIPMENT'):
-                        # Codes are semicolon-delimited within these boxes
-                        codes |= set(re.findall(r'([A-Z][A-Z0-9]{2,4})\s*;', para_upper))
+                        # Use word boundaries to capture 3-4 char codes (semicolon not required)
+                        codes |= set(re.findall(r'\b([A-Z][A-Z0-9]{2,3})\b', para_upper))
                     elif section == 'ADDITIONAL EQUIPMENT':
                         # Each paragraph: first token = code, rest = description
-                        m = re.match(r'^([A-Z][A-Z0-9]{2,4})\b', para_upper)
+                        m = re.match(r'^([A-Z][A-Z0-9]{2,3})\b', para_upper)
                         if m:
                             codes.add(m.group(1))
                 break  # only process the first matching table
