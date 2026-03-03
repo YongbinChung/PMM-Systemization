@@ -2338,9 +2338,20 @@ def main():
 
     st.markdown('WINGS CSV/Excel 파일만 업로드하면 SAM 데이터와 자동으로 비교됩니다.')
 
-    # ── Auto-load SAM files from sam_files/ folder ───────────────────────────
-    sam_folder = Path('sam_files')
-    sam_folder.mkdir(exist_ok=True)
+    # ── Auto-load SAM files from sam_files/<YYYY_MM>/ folder ─────────────────
+    sam_base = Path('sam_files')
+    sam_base.mkdir(exist_ok=True)
+
+    # Find the latest YYYY_MM subfolder (e.g., 2026_02, 2026_03)
+    import re as _re
+    month_folders = sorted(
+        [p for p in sam_base.iterdir() if p.is_dir() and _re.fullmatch(r'\d{4}_\d{2}', p.name)],
+        key=lambda p: p.name
+    )
+    if month_folders:
+        sam_folder = month_folders[-1]  # use the latest month folder
+    else:
+        sam_folder = sam_base  # fallback: files directly in sam_files/
 
     @st.cache_data(show_spinner=False)
     def _cached_sam_map(folder_str: str, mtime_key: str) -> dict:
@@ -2356,13 +2367,13 @@ def main():
     sam_map = _cached_sam_map(str(sam_folder), mtime_key)
 
     if sam_map:
-        with st.expander(f'SAM 데이터 로드됨: {len(sam_map)}개 모델 ({len(sam_file_paths)}개 파일)', expanded=False):
+        with st.expander(f'SAM 데이터 로드됨: {len(sam_map)}개 모델 ({len(sam_file_paths)}개 파일) [{sam_folder.name}]', expanded=False):
             for model, codes in sorted(sam_map.items()):
                 st.write(f'• **{model}** — {len(codes)} 코드')
     else:
         st.warning(
-            '`sam_files/` 폴더에 SAM .docx 파일이 없습니다. '
-            'GitHub 레포의 `sam_files/` 폴더에 파일을 추가하세요.'
+            f'`sam_files/{sam_folder.name}/` 폴더에 SAM .docx 파일이 없습니다. '
+            'GitHub 레포의 `sam_files/YYYY_MM/` 폴더에 파일을 추가하세요.'
         )
 
     wings_file = st.file_uploader('WINGS CSV/Excel 파일', type=['csv', 'xlsx', 'xls'])
