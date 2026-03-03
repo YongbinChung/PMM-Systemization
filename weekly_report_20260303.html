@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Work Status Report - 2026.03.03</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: #ecf0f1;
+    padding: 24px;
+    font-size: 11px;
+    color: #222;
+  }
+
+  .page {
+    background: white;
+    max-width: 1260px;
+    margin: 0 auto;
+    padding: 28px 32px 36px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+  }
+
+  /* ── Header ── */
+  .report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2.5px solid #1a5276;
+    padding-bottom: 9px;
+    margin-bottom: 10px;
+  }
+  .report-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1a5276;
+    letter-spacing: 0.5px;
+  }
+  .report-meta {
+    font-size: 10px;
+    color: #666;
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 10px;
+    font-size: 9.5px;
+    color: #444;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .sym { font-size: 14px; line-height: 1; }
+  .sym-plan    { color: #b0b0b0; }
+  .sym-ongoing { color: #1f618d; }
+  .sym-done    { color: #1f618d; font-size: 11px; }
+  .sym-delay   { color: #cb4335; }
+
+  /* ── Table ── */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  th, td {
+    border: 1px solid #c0c7cc;
+    text-align: center;
+    vertical-align: middle;
+    padding: 4px 3px;
+    font-size: 9px;
+    line-height: 1.4;
+  }
+
+  /* Quarter header */
+  .qhdr {
+    background-color: #1f618d;
+    color: white;
+    font-weight: bold;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    padding: 5px 3px;
+  }
+
+  /* Month header */
+  th.mhdr {
+    background-color: #eaf2f8;
+    font-weight: bold;
+    font-size: 9px;
+    padding: 3px 2px;
+    color: #1a3a5c;
+  }
+  th.mhdr.now {
+    background-color: #1f618d;
+    color: #fff;
+  }
+
+  /* Section header row */
+  tr.section-row td {
+    background-color: #d4e6f1;
+    font-weight: bold;
+    font-size: 11px;
+    text-align: left;
+    padding: 5px 10px;
+    color: #154360;
+    border-top: 2px solid #1f618d;
+  }
+
+  /* Data row */
+  tr.data-row td { background: white; }
+  tr.data-row:hover td { background: #f4f9fd; }
+
+  td.task-cell {
+    text-align: left;
+    padding: 5px 6px 5px 14px;
+    font-size: 9.5px;
+    font-weight: 600;
+    color: #1c2833;
+    vertical-align: middle;
+  }
+
+  td.resp-cell {
+    font-size: 9px;
+    color: #555;
+  }
+
+  td.note-cell {
+    text-align: left;
+    padding: 4px 7px;
+    font-size: 8.5px;
+    color: #444;
+    line-height: 1.55;
+    vertical-align: top;
+    padding-top: 6px;
+  }
+
+  /* Month cells */
+  td.mc { padding: 3px 1px; font-size: 14px; }
+  td.mc.now { background-color: rgba(31,97,141,0.07); }
+  td.mc.bar { background-color: rgba(31,97,141,0.13); }
+
+  /* Milestone markers */
+  .m-plan    { color: #b0b0b0; }
+  .m-ongoing { color: #1f618d; }
+  .m-done    { color: #1f618d; font-size: 11px; }
+  .m-delay   { color: #cb4335; }
+
+  /* Current month vertical emphasis */
+  .now-border-left  { border-left:  2px solid #1f618d !important; }
+  .now-border-right { border-right: 2px solid #1f618d !important; }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .page { box-shadow: none; padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Report header ── -->
+  <div class="report-header">
+    <div class="report-title">Weekly Work Status Report</div>
+    <div class="report-meta">
+      Date: March 3, 2026 (Tue)<br>
+      Prepared by: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    </div>
+  </div>
+
+  <!-- ── Legend ── -->
+  <div class="legend">
+    <span style="color:#888;font-size:9.5px;">Legend</span>
+    <div class="legend-item"><span class="sym sym-plan">◇</span> Plan</div>
+    <div class="legend-item"><span class="sym sym-ongoing">◆</span> On-going</div>
+    <div class="legend-item"><span class="sym sym-done">●</span> Done</div>
+    <div class="legend-item"><span class="sym sym-delay">◆</span> Delay</div>
+  </div>
+
+  <!-- ── Main table ── -->
+  <table>
+    <colgroup>
+      <col style="width:165px">   <!-- Task -->
+      <col style="width:52px">    <!-- Resp -->
+      <!-- 2026 Q1 -->
+      <col style="width:32px"><col style="width:32px"><col style="width:32px">
+      <!-- 2026 Q2 -->
+      <col style="width:32px"><col style="width:32px"><col style="width:32px">
+      <!-- 2026 Q3 -->
+      <col style="width:32px"><col style="width:32px"><col style="width:32px">
+      <!-- 2026 Q4 -->
+      <col style="width:32px"><col style="width:32px"><col style="width:32px">
+      <!-- 2027 Q1 (partial) -->
+      <col style="width:32px"><col style="width:32px">
+      <!-- Note -->
+      <col>
+    </colgroup>
+
+    <thead>
+      <!-- Quarter row -->
+      <tr>
+        <th rowspan="2" style="font-size:10px;font-weight:bold;background:#f0f0f0;">Task</th>
+        <th rowspan="2" style="font-size:10px;font-weight:bold;background:#f0f0f0;">Resp.</th>
+        <th colspan="3" class="qhdr">2026 Q1</th>
+        <th colspan="3" class="qhdr">Q2</th>
+        <th colspan="3" class="qhdr">Q3</th>
+        <th colspan="3" class="qhdr">Q4</th>
+        <th colspan="2" class="qhdr">2027 Q1</th>
+        <th rowspan="2" style="font-size:10px;font-weight:bold;background:#f0f0f0;">Note</th>
+      </tr>
+      <!-- Month row -->
+      <tr>
+        <th class="mhdr">Jan</th>
+        <th class="mhdr">Feb</th>
+        <th class="mhdr now now-border-left now-border-right">Mar ◀</th>
+        <th class="mhdr">Apr</th>
+        <th class="mhdr">May</th>
+        <th class="mhdr">Jun</th>
+        <th class="mhdr">Jul</th>
+        <th class="mhdr">Aug</th>
+        <th class="mhdr">Sep</th>
+        <th class="mhdr">Oct</th>
+        <th class="mhdr">Nov</th>
+        <th class="mhdr">Dec</th>
+        <th class="mhdr">Jan</th>
+        <th class="mhdr">Feb</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <!-- ══════════════════════════════════════════
+           Section 1: CSMS Progress
+      ══════════════════════════════════════════ -->
+      <tr class="section-row">
+        <td colspan="17">1. CSMS Progress</td>
+      </tr>
+
+      <!-- Task 1-1 -->
+      <tr class="data-row">
+        <td class="task-cell">Full-scale CSMS implementation<br>with consulting firm</td>
+        <td class="resp-cell"></td>
+        <td class="mc"></td>
+        <td class="mc"></td>
+        <td class="mc now now-border-left now-border-right"><span class="m-ongoing">◆</span></td>
+        <td class="mc bar"></td>
+        <td class="mc bar"></td>
+        <td class="mc"><span class="m-plan">◇</span></td>
+        <td class="mc"></td><td class="mc"></td><td class="mc"></td>
+        <td class="mc"></td><td class="mc"></td><td class="mc"></td>
+        <td class="mc"></td><td class="mc"></td>
+        <td class="note-cell">
+          · Full-scale implementation started this week with consulting firm<br>
+          · DTAG questionnaire sent to consulting firm<br>
+          · Contents to be reviewed before weekly meeting to prevent schedule delay
+        </td>
+      </tr>
+
+      <!-- Task 1-2 -->
+      <tr class="data-row">
+        <td class="task-cell">Progress report to RM</td>
+        <td class="resp-cell"></td>
+        <td class="mc"></td>
+        <td class="mc"></td>
+        <td class="mc now now-border-left now-border-right"><span class="m-ongoing">◆</span></td>
+        <td class="mc"><span class="m-plan">◇</span></td>
+        <td class="mc"></td>
+        <td class="mc"><span class="m-plan">◇</span></td>
+        <td class="mc"></td><td class="mc"></td><td class="mc"></td>
+        <td class="mc"></td><td class="mc"></td><td class="mc"></td>
+        <td class="mc"></td><td class="mc"></td>
+        <td class="note-cell">
+          · Progress updates to be reported continuously to RM
+        </td>
+      </tr>
+
+      <!-- Task 1-3 -->
+      <tr class="data-row">
+        <td class="task-cell">Vendor Creation<br>&amp; PO Processing</td>
+        <td class="resp-cell"></td>
+        <td class="mc"></td>
+        <td class="mc"></td>
+        <td class="mc now now-border-left now-border-right"><span class="m-delay">◆</span></td>
+        <td class="mc"></td>
+        <td class="mc"></td><td class="mc"></td>
+        <td class="mc"></td><td class="mc"></td><td class="mc"></td>
+        <td class="mc"></td><td class="mc"></td><td class="mc"></td>
+        <td class="mc"></td><td class="mc"></td>
+        <td class="note-cell">
+          · India Shared Service B1 access issue being resolved<br>
+          · Confirmed by Control team → Expected completion today<br>
+          · PO to proceed immediately upon completion<br>
+          · Streamlining plan to be reported to RM upon finalization<br>
+          · No internal fast-track process available → Alternative under review
+        </td>
+      </tr>
+
+      <!-- ══════════════════════════════════════════
+           Section 2: Chemical Materials Progress
+      ══════════════════════════════════════════ -->
+      <tr class="section-row">
+        <td colspan="17">2. Chemical Materials Progress</td>
+      </tr>
+
+      <!-- Task 2-1 -->
+      <tr class="data-row">
+        <td class="task-cell">Manual setup of<br>17 items (Phase 1)</td>
+        <td class="resp-cell"></td>
+        <td class="mc"></td>
+        <td class="mc"></td>
+        <td class="mc now now-border-left now-border-right"></td>
+        <td class="mc"></td>
+        <td class="mc"><span class="m-plan">◇</span></td>
+        <td class="mc bar"></td>
+        <td class="mc bar"></td>
+        <td class="mc"><span class="m-plan">◇</span></td>
+        <td class="mc"></td>
+        <td class="mc"></td><td class="mc"></td><td class="mc"></td>
+        <td class="mc"></td><td class="mc"></td>
+        <td class="note-cell">
+          · Scheduled to proceed after May<br>
+          · To prevent disruption in import procedures &amp; business operations<br>
+          · Results to be reported upon completion
+        </td>
+      </tr>
+
+      <!-- Task 2-2 -->
+      <tr class="data-row">
+        <td class="task-cell">Phase 2: Formal DMS setup<br>with parts team</td>
+        <td class="resp-cell"></td>
+        <td class="mc"></td>
+        <td class="mc"></td>
+        <td class="mc now now-border-left now-border-right"></td>
+        <td class="mc"></td>
+        <td class="mc"></td>
+        <td class="mc"><span class="m-plan">◇</span></td>
+        <td class="mc bar"></td>
+        <td class="mc bar"></td>
+        <td class="mc"><span class="m-plan">◇</span></td>
+        <td class="mc"></td><td class="mc"></td><td class="mc"></td>
+        <td class="mc"></td><td class="mc"></td>
+        <td class="note-cell">
+          · Prior discussion with IT team on security &amp; system required<br>
+          · Schedule to be confirmed and reported once details are finalized<br>
+          · Gantt chart to be shared upon schedule confirmation
+        </td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <!-- ── Footer ── -->
+  <div style="margin-top:14px; font-size:8.5px; color:#999; text-align:right;">
+    ◇ Plan &nbsp;|&nbsp; ◆ On-going (blue) &nbsp;|&nbsp; ◆ Delay (red) &nbsp;|&nbsp; ● Done &nbsp;|&nbsp;
+    <span style="display:inline-block;width:14px;height:10px;background:rgba(31,97,141,0.13);vertical-align:middle;border:1px solid #aaa;"></span> Planned progress period
+  </div>
+
+</div>
+</body>
+</html>
