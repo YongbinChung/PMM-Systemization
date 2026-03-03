@@ -2202,13 +2202,11 @@ def compare(df_wings: pd.DataFrame, sam_map: dict) -> pd.DataFrame:
             try:
                 cdt = pd.to_datetime(change_raw, errors='coerce')
                 if not pd.isna(cdt):
-                    # If date is in the past, mark Passed for both display and deadline
+                    days_left = (cdt.date() - date.today()).days
                     if cdt.date() < date.today():
                         change_display = 'Passed'
-                        days_left = 'Passed'
                     else:
                         change_display = cdt.strftime('%Y-%m-%d')
-                        days_left = (cdt.date() - date.today()).days
                 else:
                     s = str(change_raw).strip()
                     if s:
@@ -2391,7 +2389,7 @@ def main():
             ].copy().sort_values('_UntilDealine_days', ascending=True)
             urgent = comp[
                 (comp['_UntilDealine_days'].notna()) &
-                (comp['_UntilDealine_days'] >= 0) &
+                (comp['_UntilDealine_days'] >= -30) &
                 (comp['_UntilDealine_days'] <= 60)
             ].copy().sort_values('_UntilDealine_days', ascending=True)
         else:
