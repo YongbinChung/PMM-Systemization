@@ -2414,6 +2414,18 @@ def main():
             'GitHub 레포의 `sam_files/YYYY_MM/` 폴더에 파일을 추가하세요.'
         )
 
+    # ── Exception codes expander ──────────────────────────────────────────────
+    _EXCEPT_PREFIXES = ('I', 'O', 'Z', 'U')
+    except_codes = sorted(
+        (code, desc)
+        for code, desc in OPTION_CODE_MAP.items()
+        if code and code[0] in _EXCEPT_PREFIXES
+    )
+    with st.expander(f'예외코드 목록 (I·O·Z·U 시작, 비교에서 제외됨): {len(except_codes)}개', expanded=False):
+        cols = st.columns(2)
+        for i, (code, desc) in enumerate(except_codes):
+            cols[i % 2].markdown(f'`{code}` {desc}')
+
     wings_file = st.file_uploader('WINGS CSV/Excel 파일', type=['csv', 'xlsx', 'xls'])
 
     if wings_file is not None:
