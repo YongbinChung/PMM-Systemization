@@ -2081,7 +2081,10 @@ def _parse_single_sam_file(file_obj, name: str, mapping: dict, log_fn=None):
     if model_raw and codes:
         model_norm = _normalize_model(model_raw)
         if model_norm:
-            is_pto = 'PTO' in name.upper()
+            # Detect PTO by option code descriptions, not filename.
+            # A SAM file is a PTO variant if any of its codes has "PTO" in its
+            # OPTION_CODE_MAP description.  Filename may or may not contain "PTO".
+            is_pto = any('PTO' in OPTION_CODE_MAP.get(c, '').upper() for c in codes)
             if model_norm not in mapping:
                 mapping[model_norm] = {}
             mapping[model_norm][is_pto] = {'codes': codes, 'file': name}
@@ -2193,8 +2196,9 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
 
         sam_codes, sam_file = _get_sam_data(sam_entry, is_pto)
 
-        only_w = sorted(wings_codes - sam_codes) if sam_codes else []
-        only_s = sorted(sam_codes - wings_codes)
+        _EXCEPT_PREFIXES = {'I', 'O', 'Z', 'U'}
+        only_w = sorted(c for c in (wings_codes - sam_codes) if c and c[0] not in _EXCEPT_PREFIXES) if sam_codes else []
+        only_s = sorted(c for c in (sam_codes - wings_codes) if c and c[0] not in _EXCEPT_PREFIXES)
 
         # Place important columns in desired order. Put Model_norm first, then
         # Changeability Date (renamed from 'Vehicle alterable until'), then Until Dealine,
@@ -2388,7 +2392,7 @@ def main():
             if p.suffix.lower() in valid_exts and not p.name.startswith('.')
         )
         all_sam_file_paths.extend(file_paths)
-        mtime_key = f'v4,{folder.name},' + ','.join(f'{p.name}:{p.stat().st_mtime}' for p in file_paths)
+        mtime_key = f'v5,{folder.name},' + ','.join(f'{p.name}:{p.stat().st_mtime}' for p in file_paths)
         sam_maps_by_month[yyyymm] = _cached_sam_map(str(folder), mtime_key)
 
     if any(sam_maps_by_month.values()):
