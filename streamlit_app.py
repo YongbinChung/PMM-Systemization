@@ -2358,6 +2358,11 @@ def main():
     if logo_path and logo_path.exists():
         _set_logo_from_path(logo_path)
 
+    # ── Company logo ──────────────────────────────────────────────────────────
+    logo_file = Path('Star Truck Korea LOGO.jpg')
+    if logo_file.exists():
+        st.image(str(logo_file), width=320)
+
     st.title('WINGS ↔ SAM 옵션 코드 비교 대시보드')
 
     st.markdown('WINGS CSV/Excel 파일만 업로드하면 SAM 데이터와 자동으로 비교됩니다.')
