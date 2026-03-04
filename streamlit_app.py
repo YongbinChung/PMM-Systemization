@@ -2199,6 +2199,10 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
         _EXCEPT_PREFIXES = {'I', 'O', 'Z', 'U'}
         only_w = sorted(c for c in (wings_codes - sam_codes) if c and c[0] not in _EXCEPT_PREFIXES) if sam_codes else []
         only_s = sorted(c for c in (sam_codes - wings_codes) if c and c[0] not in _EXCEPT_PREFIXES)
+        except_codes_row = sorted(
+            c for c in ((wings_codes - sam_codes) | (sam_codes - wings_codes))
+            if c and c[0] in _EXCEPT_PREFIXES
+        ) if sam_codes else []
 
         # Place important columns in desired order. Put Model_norm first, then
         # Changeability Date (renamed from 'Vehicle alterable until'), then Until Dealine,
@@ -2214,6 +2218,7 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
             'Production date': r.get('Requested delivery date', '') if 'Requested delivery date' in r.index else '',
             'Only_in_SAM': ','.join(only_s),
             'Only_in_WINGS': ','.join(only_w) if sam_codes else '',
+            'Exception Codes': ','.join(except_codes_row),
             'Compared SAM file name': sam_file,
         }
         
@@ -2227,10 +2232,7 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
                 cdt = pd.to_datetime(change_raw, errors='coerce')
                 if not pd.isna(cdt):
                     days_left = (cdt.date() - date.today()).days
-                    if cdt.date() < date.today():
-                        change_display = 'Passed'
-                    else:
-                        change_display = cdt.strftime('%Y-%m-%d')
+                    change_display = cdt.strftime('%Y-%m-%d')
                 else:
                     s = str(change_raw).strip()
                     if s:
@@ -2263,12 +2265,24 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _style_deadline(df: pd.DataFrame) -> pd.DataFrame:
+    """Return same-shape DataFrame of CSS strings; colour passed-deadline cells red."""
+    styles = pd.DataFrame('', index=df.index, columns=df.columns)
+    if 'Until Dealine' in df.columns:
+        deadline_num = pd.to_numeric(df['Until Dealine'], errors='coerce')
+        mask = deadline_num.lt(0) | (df['Until Dealine'].astype(str).str.strip().str.lower() == 'passed')
+        for col in ('Until Dealine', 'Changeability Date'):
+            if col in df.columns:
+                styles.loc[mask, col] = 'color: red; font-weight: bold'
+    return styles
+
+
 def to_excel_bytes(df: pd.DataFrame) -> bytes:
     towrite = io.BytesIO()
     with pd.ExcelWriter(towrite, engine='openpyxl') as writer:
         # Select key columns for output in desired order
         output_cols = ['Commission no.', 'Baumuster', 'Model', 'Model_norm', 'Changeability Date',
-                       'Until Dealine', 'Production date', 'Only_in_SAM', 'Only_in_WINGS',
+                       'Until Dealine', 'Production date', 'Only_in_SAM', 'Only_in_WINGS', 'Exception Codes',
                        'Order status financial', 'Order status logistical', 'Gross equipment price (repricing)',
                        'Additional equipment (enumeration)', 'FIN', 'Subcategory (ID)',
                        'Requested delivery date', 'Compared SAM file name']
@@ -2439,7 +2453,7 @@ def main():
 
         # ── Prepare data splits ──────────────────────────────────────────────
         cols_table = ['Commission no.', 'Baumuster', 'Until Dealine', 'Changeability Date',
-                      'Production date', 'Model', 'Model_norm', 'Only_in_SAM', 'Only_in_WINGS', 'Compared SAM file name']
+                      'Production date', 'Model', 'Model_norm', 'Only_in_SAM', 'Only_in_WINGS', 'Exception Codes', 'Compared SAM file name']
 
         if 'Until Dealine' in comp.columns:
             comp['_UntilDealine_days'] = pd.to_numeric(comp['Until Dealine'], errors='coerce')
@@ -2464,7 +2478,7 @@ def main():
             very_urgent_display = very_urgent[available].reset_index(drop=True)
             st.caption("행을 클릭하면 해당 Commission의 옵션 코드 상세 설명이 표시됩니다.")
             vu_event = st.dataframe(
-                very_urgent_display,
+                very_urgent_display.style.apply(_style_deadline, axis=None),
                 on_select="rerun",
                 selection_mode="single-row",
                 use_container_width=True,
@@ -2495,7 +2509,7 @@ def main():
             urgent_display = urgent[available].reset_index(drop=True)
             st.caption("행을 클릭하면 해당 Commission의 옵션 코드 상세 설명이 표시됩니다.")
             u_event = st.dataframe(
-                urgent_display,
+                urgent_display.style.apply(_style_deadline, axis=None),
                 on_select="rerun",
                 selection_mode="single-row",
                 use_container_width=True,
