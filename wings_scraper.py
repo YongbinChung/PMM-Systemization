@@ -371,7 +371,7 @@ async def _set_filter_row(page, row_idx: int, field: str, operator: str, value: 
 
         await page.wait_for_timeout(800)
 
-        op_result = await _click_first_popup_item_playwright(page)
+        op_result = await _click_popup_item_by_text_playwright(page, operator)
         log.append(f"op popup: {op_result}")
         await page.wait_for_timeout(1000)  # 날짜 입력창 나타날 때까지 대기
 
@@ -486,6 +486,35 @@ async def _click_first_popup_item_playwright(page) -> str:
     await page.wait_for_timeout(300)
     await page.keyboard.press("Enter")
     return "keyboard:ArrowDown+Enter"
+
+
+async def _click_popup_item_by_text_playwright(page, target_text: str) -> str:
+    """팝업에서 target_text와 일치하는 항목을 Playwright 클릭으로 선택한다.
+
+    1) 정확한 텍스트 매칭 → 2) 부분 매칭 → 3) 첫 번째 항목 fallback.
+    'greater equal', 'less equal' 등 특정 오퍼레이터 선택에 사용한다.
+    """
+    target_lower = target_text.lower().strip()
+
+    for exact in (True, False):  # 정확 매칭 먼저, 그 다음 부분 매칭
+        for sel in ('[item]', '.dijitComboBoxItem', '.dijitMenuItem'):
+            try:
+                items = page.locator(sel)
+                cnt = await items.count()
+                for i in range(min(cnt, 30)):
+                    item = items.nth(i)
+                    txt = (await item.inner_text()).strip().lower()
+                    matched = (txt == target_lower) if exact else (target_lower in txt)
+                    if matched:
+                        await item.click(timeout=3000)
+                        mode = "exact" if exact else "partial"
+                        return f"{mode}:{sel}[{i}] '{txt}'"
+            except Exception:
+                continue
+
+    # 최후 fallback: 첫 번째 항목
+    result = await _click_first_popup_item_playwright(page)
+    return f"fallback→{result}"
 
 
 async def _click_popup_item(page, text: str) -> bool:
