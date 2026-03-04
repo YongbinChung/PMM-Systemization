@@ -1845,7 +1845,10 @@ def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_s
         ecol1, ecol2 = st.columns(2)
         for i, code in enumerate(except_codes):
             desc = _lookup_code(code)
-            ecol1.markdown(f"**`{code}`** &nbsp; {desc}") if i % 2 == 0 else ecol2.markdown(f"**`{code}`** &nbsp; {desc}")
+            if i % 2 == 0:
+                ecol1.markdown(f"**`{code}`** &nbsp; {desc}")
+            else:
+                ecol2.markdown(f"**`{code}`** &nbsp; {desc}")
 
 
 
