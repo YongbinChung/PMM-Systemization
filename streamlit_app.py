@@ -1812,7 +1812,7 @@ def _lookup_code(code: str) -> str:
 
 
 @st.dialog("옵션 코드 상세 설명", width="large")
-def show_code_details(commission_no: str, sam_str: str, wings_str: str):
+def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_str: str = ""):
     st.markdown(f"**Commission No.:** `{commission_no}`")
     st.divider()
 
@@ -1837,6 +1837,15 @@ def show_code_details(commission_no: str, sam_str: str, wings_str: str):
                 st.markdown(f"**`{code}`** &nbsp; {desc}")
         else:
             st.info("없음")
+
+    except_codes = [c.strip() for c in str(except_str).split(",") if c.strip() and c.strip() != "nan"]
+    if except_codes:
+        st.divider()
+        st.markdown("#### 예외코드 (비교에서 제외됨)")
+        ecol1, ecol2 = st.columns(2)
+        for i, code in enumerate(except_codes):
+            desc = _lookup_code(code)
+            ecol1.markdown(f"**`{code}`** &nbsp; {desc}") if i % 2 == 0 else ecol2.markdown(f"**`{code}`** &nbsp; {desc}")
 
 
 
@@ -2490,6 +2499,7 @@ def main():
                     str(urow.get("Commission no.", "")),
                     str(urow.get("Only_in_SAM", "")),
                     str(urow.get("Only_in_WINGS", "")),
+                    str(urow.get("Exception Codes", "")),
                 )
             st.download_button(
                 '📥 Urgent (2주 이내) Excel 다운로드',
@@ -2522,6 +2532,7 @@ def main():
                     str(urow.get("Commission no.", "")),
                     str(urow.get("Only_in_SAM", "")),
                     str(urow.get("Only_in_WINGS", "")),
+                    str(urow.get("Exception Codes", "")),
                 )
             st.download_button(
                 '📥 Changeability (60일 이내) Excel 다운로드',
