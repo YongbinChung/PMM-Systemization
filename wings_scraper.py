@@ -231,8 +231,8 @@ async def _wings_download_async(months: list, download_dir: str, on_status=None)
         except Exception:
             raise RuntimeError("검색 결과 페이지가 로드되지 않았습니다 (60초 초과).")
 
-        # Export 전 3초 추가 대기 (결과 완전 로드)
-        await page.wait_for_timeout(3000)
+        # Export 전 4초 추가 대기 (결과 완전 로드)
+        await page.wait_for_timeout(4000)
 
         # ── 6. Export 클릭 → 다운로드 대기 ───────────────────────────────────
         status("Export 클릭 중... 파일 다운로드를 기다리는 중입니다.")
