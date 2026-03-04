@@ -119,6 +119,40 @@ async def _copy_filter_row(page, row_idx: int):
     await page.wait_for_timeout(1000)
 
 
+async def _set_all_row_connectors(page, connector: str = "or"):
+    """필터 행 사이의 모든 and/or 커넥터를 지정한 값으로 변경한다.
+
+    비연속 월 검색 시 'and' → 'or' 변경에 사용한다.
+    커넥터 위젯은 현재 값이 'and' 또는 'or'인 dijit 위젯으로 탐지한다.
+    """
+    conn_bboxes = await page.evaluate(
+        """() => {
+            const result = [];
+            for (const w of dijit.registry.toArray()) {
+                try {
+                    const val = w.get ? w.get('value') : null;
+                    if (val !== 'and' && val !== 'or') continue;
+                    if (!w.domNode) continue;
+                    const r = w.domNode.getBoundingClientRect();
+                    // ▼ 버튼: 오른쪽 끝에서 10px 안쪽
+                    result.push({x: r.x + r.width - 10, y: r.y + r.height / 2,
+                                  scrollX: window.scrollX, scrollY: window.scrollY,
+                                  id: w.id, currentVal: val});
+                } catch (e) {}
+            }
+            return result;
+        }"""
+    )
+    for bbox in conn_bboxes:
+        await page.mouse.click(
+            bbox["x"] + bbox["scrollX"],
+            bbox["y"] + bbox["scrollY"],
+        )
+        await page.wait_for_timeout(800)
+        await _click_popup_item_by_text_playwright(page, connector)
+        await page.wait_for_timeout(500)
+
+
 async def _wings_download_async(months: list, download_dir: str, on_status=None) -> str:
 
     months_sorted = sorted(months)
@@ -199,6 +233,8 @@ async def _wings_download_async(months: list, download_dir: str, on_status=None)
                 if i > 0:
                     await _copy_filter_row(page, i - 1)
                 await _set_filter_row(page, i, "Requested delivery date", "equal", date_str)
+            # 행 사이 커넥터를 and → or 로 변경 (비연속 월은 OR 조건)
+            await _set_all_row_connectors(page, "or")
 
         # ── 5. Execute 클릭 → 결과 페이지 대기 ───────────────────────────────
         status("검색 실행 중...")
