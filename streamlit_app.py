@@ -1820,10 +1820,10 @@ def _lookup_code(code: str) -> str:
         stripped = code[1:]
         if stripped in OPTION_CODE_MAP:
             return OPTION_CODE_MAP[stripped] + " (J-variant)"
-    return "설명 없음"
+    return "No description available"
 
 
-@st.dialog("옵션 코드 상세 설명", width="large")
+@st.dialog("Option Code Details", width="large")
 def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_str: str = ""):
     st.markdown(f"**Commission No.:** `{commission_no}`")
     st.divider()
@@ -1831,29 +1831,29 @@ def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_s
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("#### SAM에만 있는 코드")
+        st.markdown("#### Codes Only in SAM")
         sam_codes = [c.strip() for c in str(sam_str).split(",") if c.strip() and c.strip() != "nan"]
         if sam_codes:
             for code in sam_codes:
                 desc = _lookup_code(code)
                 st.markdown(f"**`{code}`** &nbsp; {desc}")
         else:
-            st.info("없음")
+            st.info("None")
 
     with col2:
-        st.markdown("#### WINGS에만 있는 코드")
+        st.markdown("#### Codes Only in WINGS")
         wings_codes = [c.strip() for c in str(wings_str).split(",") if c.strip() and c.strip() != "nan"]
         if wings_codes:
             for code in wings_codes:
                 desc = _lookup_code(code)
                 st.markdown(f"**`{code}`** &nbsp; {desc}")
         else:
-            st.info("없음")
+            st.info("None")
 
     except_codes = [c.strip() for c in str(except_str).split(",") if c.strip() and c.strip() != "nan"]
     if except_codes:
         st.divider()
-        st.markdown("#### 예외코드 (비교에서 제외됨)")
+        st.markdown("#### Exception Codes (Excluded from Comparison)")
         ecol1, ecol2 = st.columns(2)
         for i, code in enumerate(except_codes):
             desc = _lookup_code(code)
@@ -1878,7 +1878,7 @@ def parse_wings(file) -> pd.DataFrame:
 
     # expected columns in sample: 'Commission no.' and code columns
     if 'Commission no.' not in df.columns:
-        st.error('CSV/Excel에서 `Commission no.` 컬럼을 찾을 수 없습니다.')
+        st.error('Cannot find `Commission no.` column in the CSV/Excel file.')
         return pd.DataFrame()
 
     # Find model name column: prefer 'Type (brief)', fallback to 'Type', or 'Baumuster'
@@ -1896,7 +1896,7 @@ def parse_wings(file) -> pd.DataFrame:
         model_col = 'Baumuster' if 'Baumuster' in df.columns else None
 
     if model_col is None:
-        st.warning('모델명 컬럼을 찾을 수 없습니다. Baumuster 컬럼이 모델명으로 사용됩니다.')
+        st.warning('Model name column not found. Using Baumuster column as model name.')
         model_col = df.columns[1] if len(df.columns) > 1 else 'Commission no.'
 
     # Prefer explicit option code columns from WINGS export (case-insensitive)
@@ -2093,7 +2093,7 @@ def _parse_single_sam_file(file_obj, name: str, mapping: dict, log_fn=None):
             codes = set(c for c in raw_codes if any(ch.isdigit() for ch in c))
     except Exception as e:
         if log_fn:
-            log_fn(f'SAM 파일 읽기 오류 ({name}): {str(e)[:80]}')
+            log_fn(f'SAM file read error ({name}): {str(e)[:80]}')
         return
 
     if not model_raw:
@@ -2113,7 +2113,7 @@ def _parse_single_sam_file(file_obj, name: str, mapping: dict, log_fn=None):
                 mapping[model_norm] = {}
             mapping[model_norm][is_pto] = {'codes': codes, 'file': name}
             if log_fn:
-                log_fn(f"✓ '{name}' → 모델 '{model_norm}' ({'PTO' if is_pto else 'non-PTO'}, {len(codes)} 코드)")
+                log_fn(f"✓ '{name}' → model '{model_norm}' ({'PTO' if is_pto else 'non-PTO'}, {len(codes)} codes)")
 
 
 def load_sam_from_folder(folder: Path) -> dict:
@@ -2316,7 +2316,7 @@ def to_excel_bytes(df: pd.DataFrame) -> bytes:
 
 
 def main():
-    st.set_page_config(page_title='WINGS vs SAM 비교', layout='wide')
+    st.set_page_config(page_title='WINGS vs SAM Comparison', layout='wide')
 
     # ── Global text visibility overrides ─────────────────────────────────────
     st.markdown("""
@@ -2443,9 +2443,9 @@ def main():
     if logo_file.exists():
         st.image(str(logo_file), width=280)
 
-    st.title('WINGS ↔ SAM 옵션 코드 비교 대시보드')
+    st.title('WINGS ↔ SAM Option Code Comparison Dashboard')
 
-    st.markdown('WINGS CSV/Excel 파일만 업로드하면 SAM 데이터와 자동으로 비교됩니다.')
+    st.markdown('Upload a WINGS CSV/Excel file to automatically compare with SAM data.')
 
     # ── Auto-load SAM files from sam_files/<YYYY_MM>/ folders ────────────────
     sam_base = Path('sam_files')
@@ -2482,16 +2482,16 @@ def main():
 
     if any(sam_maps_by_month.values()):
         labels = [f.name for f in month_folders]
-        with st.expander(f'SAM 데이터 로드됨: {", ".join(labels)} ({len(all_sam_file_paths)}개 파일)', expanded=False):
+        with st.expander(f'SAM Data Loaded: {", ".join(labels)} ({len(all_sam_file_paths)} files)', expanded=False):
             for yyyymm, s_map in sorted(sam_maps_by_month.items()):
                 folder_label = f'{yyyymm // 100}_{yyyymm % 100:02d}' if yyyymm else 'fallback'
                 st.markdown(f'**[{folder_label}]**')
                 for model, codes in sorted(s_map.items()):
-                    st.write(f'• **{model}** — {len(codes)} 코드')
+                    st.write(f'• **{model}** — {len(codes)} codes')
     else:
         st.warning(
-            '`sam_files/YYYY_MM/` 폴더에 SAM .docx 파일이 없습니다. '
-            'GitHub 레포의 `sam_files/YYYY_MM/` 폴더에 파일을 추가하세요.'
+            'No SAM .docx files found in `sam_files/YYYY_MM/`. '
+            'Please add files to the `sam_files/YYYY_MM/` folder in the GitHub repository.'
         )
 
     # ── Exception codes expander ──────────────────────────────────────────────
@@ -2501,7 +2501,7 @@ def main():
         for code, desc in OPTION_CODE_MAP.items()
         if code and code[0] in _EXCEPT_PREFIXES
     )
-    with st.expander(f'예외코드 목록 (I·O·Z·U 시작, 비교에서 제외됨): {len(except_codes)}개', expanded=False):
+    with st.expander(f'Exception Code List (starting with I·O·Z·U, excluded from comparison): {len(except_codes)} codes', expanded=False):
         cols = st.columns(2)
         for i, (code, desc) in enumerate(except_codes):
             cols[i % 2].markdown(f'`{code}` {desc}')
@@ -2509,7 +2509,7 @@ def main():
     # ── Search by Production Date (로컬 실행 시 WINGS 자동화) ─────────────────
     if _WINGS_AUTO:
         st.subheader('Search by Production Date')
-        st.caption('생산월을 선택하면 WINGS에서 자동으로 파일을 받아 비교합니다. (로컬 전용)')
+        st.caption('Select a production month to automatically fetch and compare files from WINGS. (Local only)')
 
         # 2024-01 ~ 내년 12월까지 월 옵션 생성
         _today = date.today()
@@ -2520,7 +2520,7 @@ def main():
         _month_opts = [m for m in _month_opts if m <= f'{_today.year + 1}-12']
 
         _sel_months = st.multiselect(
-            '생산월 선택 (복수 선택 가능)',
+            'Select Production Month(s)',
             options=_month_opts,
             default=[f'{_today.year}-{_today.month:02d}'],
             key='wings_months',
@@ -2529,22 +2529,22 @@ def main():
         _col1, _col2 = st.columns([2, 1])
         with _col1:
             _fetch_btn = st.button(
-                'WINGS에서 자동으로 가져오기',
+                'Auto-fetch from WINGS',
                 key='wings_fetch_btn',
                 type='primary',
                 disabled=not _sel_months,
             )
         with _col2:
             if st.session_state.get('_wings_auto_name'):
-                st.caption(f"현재 로드됨: {st.session_state['_wings_auto_name']}")
-                if st.button('초기화', key='wings_clear'):
+                st.caption(f"Loaded: {st.session_state['_wings_auto_name']}")
+                if st.button('Clear', key='wings_clear'):
                     st.session_state.pop('_wings_auto_bytes', None)
                     st.session_state.pop('_wings_auto_name', None)
                     st.rerun()
 
         if _fetch_btn and _sel_months:
             _status_ph = st.empty()
-            _status_ph.info('WINGS 자동 다운로드 시작 중...')
+            _status_ph.info('Starting WINGS auto-download...')
             try:
                 _dl_path = _wings_fetch(
                     months=_sel_months,
@@ -2553,33 +2553,33 @@ def main():
                 with open(_dl_path, 'rb') as _f:
                     st.session_state['_wings_auto_bytes'] = _f.read()
                 st.session_state['_wings_auto_name'] = os.path.basename(_dl_path)
-                _status_ph.success(f"다운로드 완료: {st.session_state['_wings_auto_name']}")
+                _status_ph.success(f"Download complete: {st.session_state['_wings_auto_name']}")
                 st.rerun()
             except Exception as _e:
                 import traceback as _tb
                 _status_ph.error(
-                    f'다운로드 실패: {type(_e).__name__}: {_e}\n\n'
+                    f'Download failed: {type(_e).__name__}: {_e}\n\n'
                     f'```\n{_tb.format_exc()}\n```'
                 )
 
         st.divider()
-        st.markdown('**또는 WINGS 파일 직접 업로드:**')
+        st.markdown('**Or upload a WINGS file directly:**')
 
-    wings_file = st.file_uploader('WINGS CSV/Excel 파일', type=['csv', 'xlsx', 'xls'])
+    wings_file = st.file_uploader('WINGS CSV/Excel File', type=['csv', 'xlsx', 'xls'])
 
     # 자동 다운로드된 파일이 있고 업로드된 파일이 없으면 자동 파일 사용
     if wings_file is None and st.session_state.get('_wings_auto_bytes'):
         wings_file = io.BytesIO(st.session_state['_wings_auto_bytes'])
-        st.info(f"자동 다운로드 파일 사용 중: {st.session_state.get('_wings_auto_name', 'wings.xlsx')}")
+        st.info(f"Using auto-downloaded file: {st.session_state.get('_wings_auto_name', 'wings.xlsx')}")
 
     if wings_file is not None:
         df_w = parse_wings(wings_file)
-        st.success(f'WINGS 파일 읽음: {len(df_w)} 행')
+        st.success(f'WINGS file loaded: {len(df_w)} rows')
 
         comp = compare(df_w, sam_maps_by_month)
 
-        st.subheader('요약')
-        st.metric('Commission 수', len(comp))
+        st.subheader('Summary')
+        st.metric('Total Commissions', len(comp))
 
         # ── Prepare data splits ──────────────────────────────────────────────
         cols_table = ['Commission no.', 'Baumuster', 'Until Dealine', 'Changeability Date',
@@ -2606,7 +2606,7 @@ def main():
         if not very_urgent.empty:
             available = [c for c in cols_table if c in very_urgent.columns]
             very_urgent_display = very_urgent[available].reset_index(drop=True)
-            st.markdown('<p style="color:#000000;font-weight:600;font-size:14px;margin:0 0 6px 0">행을 클릭하면 해당 Commission의 옵션 코드 상세 설명이 표시됩니다.</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color:#000000;font-weight:600;font-size:14px;margin:0 0 6px 0">Click a row to view option code details for the selected Commission.</p>', unsafe_allow_html=True)
             vu_event = st.dataframe(
                 very_urgent_display.style.apply(_style_deadline, axis=None),
                 on_select="rerun",
@@ -2623,13 +2623,13 @@ def main():
                     str(urow.get("Exception Codes", "")),
                 )
             st.download_button(
-                '📥 Urgent (2주 이내) Excel 다운로드',
+                '📥 Download Urgent (within 2 weeks) Excel',
                 data=to_excel_bytes(very_urgent_display),
                 file_name='urgent_2weeks.xlsx',
                 key='dl_very_urgent',
             )
         else:
-            st.success("2주 이내 긴급 수정 필요 건 없음")
+            st.success("No urgent corrections needed within 2 weeks.")
 
         st.divider()
 
@@ -2638,7 +2638,7 @@ def main():
         if not urgent.empty:
             available = [c for c in cols_table if c in urgent.columns]
             urgent_display = urgent[available].reset_index(drop=True)
-            st.markdown('<p style="color:#000000;font-weight:600;font-size:14px;margin:0 0 6px 0">행을 클릭하면 해당 Commission의 옵션 코드 상세 설명이 표시됩니다.</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color:#000000;font-weight:600;font-size:14px;margin:0 0 6px 0">Click a row to view option code details for the selected Commission.</p>', unsafe_allow_html=True)
             u_event = st.dataframe(
                 urgent_display.style.apply(_style_deadline, axis=None),
                 on_select="rerun",
@@ -2656,19 +2656,19 @@ def main():
                     str(urow.get("Exception Codes", "")),
                 )
             st.download_button(
-                '📥 Changeability (60일 이내) Excel 다운로드',
+                '📥 Download Changeability (within 60 days) Excel',
                 data=to_excel_bytes(urgent_display),
                 file_name='changeability_60days.xlsx',
                 key='dl_urgent',
             )
         else:
-            st.info("60일 이내 수정 필요 건 없음")
+            st.info("No corrections needed within 60 days.")
 
         st.divider()
 
         # ── Overall Excel download ────────────────────────────────────────────
         st.download_button(
-            '📥 전체 데이터 Excel 다운로드',
+            '📥 Download All Data Excel',
             data=to_excel_bytes(comp),
             file_name='wings_sam_comparison_all.xlsx',
             key='dl_all',
