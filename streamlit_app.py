@@ -2306,6 +2306,26 @@ def to_excel_bytes(df: pd.DataFrame) -> bytes:
 def main():
     st.set_page_config(page_title='WINGS vs SAM 비교', layout='wide')
 
+    # ── Global text visibility overrides ─────────────────────────────────────
+    st.markdown("""
+    <style>
+    /* Caption text */
+    [data-testid="stCaptionContainer"] p {
+        color: #000000 !important;
+        font-weight: 600 !important;
+        opacity: 1 !important;
+    }
+    /* Dataframe column headers */
+    [data-testid="stDataFrame"] .dvn-scroller .col_heading,
+    [data-testid="stDataFrame"] th,
+    [data-testid="stDataFrame"] [role="columnheader"] {
+        color: #000000 !important;
+        opacity: 1 !important;
+        font-weight: 700 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # --- Dashboard (existing code below) ---
     # 앱 배경 및 로고 처리: workspace의 assets/ 아래 파일이 있으면 사용,
     # 없으면 업로드 위젯으로 업로드하도록 합니다.
