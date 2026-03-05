@@ -2547,7 +2547,7 @@ def main():
     )
 
     with st.expander(f'Exception Code List (excluded from comparison): {len(except_codes)} codes', expanded=False):
-        # ── + Add button ──────────────────────────────────────────────────────
+        # ── + Add row ─────────────────────────────────────────────────────────
         add_col1, add_col2, add_col3 = st.columns([1, 2, 0.5])
         with add_col1:
             _new_code = st.text_input('Code', key='_exc_new_code', placeholder='e.g. A1B', label_visibility='collapsed')
@@ -2562,15 +2562,29 @@ def main():
                         st.session_state['_except_custom_desc'][_nc] = _new_desc.strip()
                     st.rerun()
 
+        # ── Search bar ────────────────────────────────────────────────────────
+        _exc_search = st.text_input('Search', key='_exc_search', placeholder='Search by code or description...', label_visibility='collapsed')
+
         st.divider()
 
-        for code, desc in except_codes:
-            c1, c2 = st.columns([6, 1])
-            c1.markdown(f'`{code}` {desc}')
-            if c2.button('✕', key=f'_exc_del_{code}'):
-                st.session_state['_except_codes_set'].discard(code)
-                st.session_state['_except_custom_desc'].pop(code, None)
-                st.rerun()
+        # ── Filter by search term ─────────────────────────────────────────────
+        _filtered = except_codes
+        if _exc_search and _exc_search.strip():
+            _q = _exc_search.strip().upper()
+            _filtered = [(c, d) for c, d in except_codes if _q in c.upper() or _q in d.upper()]
+
+        # ── 3 columns per row ─────────────────────────────────────────────────
+        for row_start in range(0, len(_filtered), 3):
+            row_items = _filtered[row_start:row_start + 3]
+            cols = st.columns(3)
+            for j, (code, desc) in enumerate(row_items):
+                with cols[j]:
+                    _c1, _c2 = st.columns([5, 1])
+                    _c1.markdown(f'`{code}` {desc}')
+                    if _c2.button('✕', key=f'_exc_del_{code}'):
+                        st.session_state['_except_codes_set'].discard(code)
+                        st.session_state['_except_custom_desc'].pop(code, None)
+                        st.rerun()
 
     # ── Search by Production Date ──────────────────────────────────────────────
     st.subheader('Search by Production Date')
