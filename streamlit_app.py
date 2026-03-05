@@ -2255,12 +2255,12 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
 
         sam_codes, sam_file = _get_sam_data(sam_entry, is_pto)
 
-        _EXCEPT_PREFIXES = {'I', 'O', 'Z', 'U'}
-        only_w = sorted(c for c in (wings_codes - sam_codes) if c and c[0] not in _EXCEPT_PREFIXES) if sam_codes else []
-        only_s = sorted(c for c in (sam_codes - wings_codes) if c and c[0] not in _EXCEPT_PREFIXES)
+        _exc_set = st.session_state.get('_except_codes_set', {c for c in OPTION_CODE_MAP if c and c[0] in {'I','O','Z','U'}})
+        only_w = sorted(c for c in (wings_codes - sam_codes) if c and c not in _exc_set) if sam_codes else []
+        only_s = sorted(c for c in (sam_codes - wings_codes) if c and c not in _exc_set)
         except_codes_row = sorted(
             c for c in ((wings_codes - sam_codes) | (sam_codes - wings_codes))
-            if c and c[0] in _EXCEPT_PREFIXES
+            if c and c in _exc_set
         ) if sam_codes else []
 
         # Place important columns in desired order. Put Model_norm first, then
@@ -2529,17 +2529,48 @@ def main():
             'Please add files to the `sam_files/YYYY_MM/` folder in the GitHub repository.'
         )
 
-    # ── Exception codes expander ──────────────────────────────────────────────
+    # ── Exception codes (dynamic, stored in session state) ───────────────────
     _EXCEPT_PREFIXES = ('I', 'O', 'Z', 'U')
+    if '_except_codes_set' not in st.session_state:
+        st.session_state['_except_codes_set'] = {
+            code for code in OPTION_CODE_MAP if code and code[0] in _EXCEPT_PREFIXES
+        }
+    if '_except_custom_desc' not in st.session_state:
+        st.session_state['_except_custom_desc'] = {}
+
+    _exc_set = st.session_state['_except_codes_set']
+    _exc_custom = st.session_state['_except_custom_desc']
+
     except_codes = sorted(
-        (code, desc)
-        for code, desc in OPTION_CODE_MAP.items()
-        if code and code[0] in _EXCEPT_PREFIXES
+        [(code, _exc_custom.get(code, OPTION_CODE_MAP.get(code, ''))) for code in _exc_set],
+        key=lambda x: x[0],
     )
-    with st.expander(f'Exception Code List (starting with I·O·Z·U, excluded from comparison): {len(except_codes)} codes', expanded=False):
-        cols = st.columns(2)
-        for i, (code, desc) in enumerate(except_codes):
-            cols[i % 2].markdown(f'`{code}` {desc}')
+
+    with st.expander(f'Exception Code List (excluded from comparison): {len(except_codes)} codes', expanded=False):
+        # ── + Add button ──────────────────────────────────────────────────────
+        add_col1, add_col2, add_col3 = st.columns([1, 2, 0.5])
+        with add_col1:
+            _new_code = st.text_input('Code', key='_exc_new_code', placeholder='e.g. A1B', label_visibility='collapsed')
+        with add_col2:
+            _new_desc = st.text_input('Description', key='_exc_new_desc', placeholder='Description', label_visibility='collapsed')
+        with add_col3:
+            if st.button('+ Add', key='_exc_add_btn', type='primary'):
+                _nc = _new_code.strip().upper()
+                if _nc:
+                    st.session_state['_except_codes_set'].add(_nc)
+                    if _new_desc.strip():
+                        st.session_state['_except_custom_desc'][_nc] = _new_desc.strip()
+                    st.rerun()
+
+        st.divider()
+
+        for code, desc in except_codes:
+            c1, c2 = st.columns([6, 1])
+            c1.markdown(f'`{code}` {desc}')
+            if c2.button('✕', key=f'_exc_del_{code}'):
+                st.session_state['_except_codes_set'].discard(code)
+                st.session_state['_except_custom_desc'].pop(code, None)
+                st.rerun()
 
     # ── Search by Production Date ──────────────────────────────────────────────
     st.subheader('Search by Production Date')
