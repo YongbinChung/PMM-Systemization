@@ -1853,7 +1853,7 @@ def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_s
     except_codes = [c.strip() for c in str(except_str).split(",") if c.strip() and c.strip() != "nan"]
     if except_codes:
         st.divider()
-        st.markdown("#### Exception Codes (Excluded from Comparison)")
+        st.markdown("#### Production Codes (automatically created, just for reference)")
         ecol1, ecol2 = st.columns(2)
         for i, code in enumerate(except_codes):
             desc = _lookup_code(code)
