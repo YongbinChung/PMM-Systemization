@@ -2517,26 +2517,25 @@ def main():
         for i, (code, desc) in enumerate(except_codes):
             cols[i % 2].markdown(f'`{code}` {desc}')
 
-    # ── Search by Production Date (로컬 실행 시 WINGS 자동화) ─────────────────
+    # ── Search by Production Date ──────────────────────────────────────────────
+    st.subheader('Search by Production Date')
+
+    # 2024-01 ~ 내년 12월까지 월 옵션 생성
+    _today = date.today()
+    _month_opts = []
+    for _y in range(2024, _today.year + 2):
+        for _m in range(1, 13):
+            _month_opts.append(f'{_y}-{_m:02d}')
+    _month_opts = [m for m in _month_opts if m <= f'{_today.year + 1}-12']
+
+    _sel_months = st.multiselect(
+        'Select Production Month(s)',
+        options=_month_opts,
+        default=[f'{_today.year}-{_today.month:02d}'],
+        key='wings_months',
+    )
+
     if _WINGS_AUTO:
-        st.subheader('Search by Production Date')
-        st.caption('Select a production month to automatically fetch and compare files from WINGS. (Local only)')
-
-        # 2024-01 ~ 내년 12월까지 월 옵션 생성
-        _today = date.today()
-        _month_opts = []
-        for _y in range(2024, _today.year + 2):
-            for _m in range(1, 13):
-                _month_opts.append(f'{_y}-{_m:02d}')
-        _month_opts = [m for m in _month_opts if m <= f'{_today.year + 1}-12']
-
-        _sel_months = st.multiselect(
-            'Select Production Month(s)',
-            options=_month_opts,
-            default=[f'{_today.year}-{_today.month:02d}'],
-            key='wings_months',
-        )
-
         _col1, _col2 = st.columns([2, 1])
         with _col1:
             _fetch_btn = st.button(
@@ -2575,6 +2574,8 @@ def main():
 
         st.divider()
         st.markdown('**Or upload a WINGS file directly:**')
+    else:
+        st.caption('Auto-fetch is available in the local environment only. Please upload a WINGS file below.')
 
     wings_file = st.file_uploader('WINGS CSV/Excel File', type=['csv', 'xlsx', 'xls'])
 
