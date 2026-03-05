@@ -2351,12 +2351,12 @@ def to_excel_bytes(df: pd.DataFrame) -> bytes:
 
 
 def main():
-    st.set_page_config(page_title='WINGS vs SAM Comparison', layout='wide')
+    st.set_page_config(page_title='AFAB vs SAM Comparison', layout='wide')
 
-    # ── Global text visibility overrides ─────────────────────────────────────
+    # ── Global CSS ────────────────────────────────────────────────────────────
     st.markdown("""
     <style>
-    /* Dataframe column headers — target Glide Data Grid accessibility overlay */
+    /* Dataframe column headers */
     [data-testid="stDataFrame"] div[role="columnheader"],
     [data-testid="stDataFrame"] div[role="columnheader"] *,
     [data-testid="stDataFrame"] div[role="row"]:first-child > div,
@@ -2370,27 +2370,103 @@ def main():
         font-weight: 800 !important;
     }
 
-    /* WINGS 가져오기 버튼: primary → 어두운 파란색 */
-    [data-testid="stButton"][id*="wings_fetch_btn"] > button,
+    /* Primary buttons: dark navy */
     button[kind="primary"],
     [data-testid="stBaseButton-primary"] {
         background-color: #1a3a5c !important;
         border-color: #1a3a5c !important;
         color: #ffffff !important;
     }
-    [data-testid="stButton"][id*="wings_fetch_btn"] > button:hover,
     button[kind="primary"]:hover,
     [data-testid="stBaseButton-primary"]:hover {
         background-color: #24527a !important;
         border-color: #24527a !important;
     }
 
-    /* multiselect 선택 태그: 어두운 파란색 */
+    /* Multiselect tags: dark navy */
     [data-testid="stMultiSelect"] span[data-baseweb="tag"] {
         background-color: #1a3a5c !important;
     }
     [data-testid="stMultiSelect"] span[data-baseweb="tag"] span {
         color: #ffffff !important;
+    }
+
+    /* Dark navy header bar */
+    .header-bar {
+        background: linear-gradient(135deg, #0d1b2a 0%, #1a3a5c 60%, #1f618d 100%);
+        padding: 1.2rem 2rem;
+        border-radius: 10px;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .header-bar img {
+        height: 52px;
+        filter: brightness(0) invert(1);
+    }
+    .header-bar .title {
+        color: #ffffff;
+        font-size: 1.65rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    .header-bar .subtitle {
+        color: rgba(255,255,255,0.7);
+        font-size: 0.85rem;
+        margin-top: 2px;
+    }
+
+    /* KPI metric cards */
+    .kpi-card {
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-left: 4px solid #1a3a5c;
+        text-align: center;
+    }
+    .kpi-card.red { border-left-color: #cb4335; }
+    .kpi-card.green { border-left-color: #27ae60; }
+    .kpi-card.blue { border-left-color: #1f618d; }
+    .kpi-card.orange { border-left-color: #e67e22; }
+    .kpi-card .kpi-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.2;
+    }
+    .kpi-card.red .kpi-value { color: #cb4335; }
+    .kpi-card.green .kpi-value { color: #27ae60; }
+    .kpi-card.blue .kpi-value { color: #1f618d; }
+    .kpi-card.orange .kpi-value { color: #e67e22; }
+    .kpi-card .kpi-label {
+        font-size: 0.8rem;
+        color: #666;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Sidebar styling */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #f8f9fa 0%, #eef1f5 100%);
+    }
+    [data-testid="stSidebar"] .stMarkdown h3 {
+        color: #1a3a5c;
+        border-bottom: 2px solid #1a3a5c;
+        padding-bottom: 0.3rem;
+    }
+
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 6px 6px 0 0;
+        padding: 8px 20px;
+        font-weight: 600;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -2473,35 +2549,40 @@ def main():
     if logo_path and logo_path.exists():
         _set_logo_from_path(logo_path)
 
-    # ── Company logo ──────────────────────────────────────────────────────────
+    # ── Dark navy header bar ─────────────────────────────────────────────────
     logo_file = Path('MB Star_Logo_black.png')
+    _logo_html = ''
     if logo_file.exists():
-        st.image(str(logo_file), width=280)
-
-    st.title('AFAB ↔ SAM Option Code Comparison Dashboard')
-
-    st.markdown('Upload a WINGS CSV/Excel file to automatically compare with SAM data.')
+        _logo_b64 = base64.b64encode(logo_file.read_bytes()).decode('ascii')
+        _logo_html = f'<img src="data:image/png;base64,{_logo_b64}" />'
+    st.markdown(f'''
+    <div class="header-bar">
+        {_logo_html}
+        <div>
+            <div class="title">AFAB ↔ SAM Option Code Comparison Dashboard</div>
+            <div class="subtitle">Upload an AFAB CSV/Excel file to automatically compare with SAM data</div>
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
 
     # ── Auto-load SAM files from sam_files/<YYYY_MM>/ folders ────────────────
     sam_base = Path('sam_files')
     sam_base.mkdir(exist_ok=True)
 
     import re as _re
-    # Find all YYYY_MM subfolders, sorted oldest → newest
     month_folders = sorted(
         [p for p in sam_base.iterdir() if p.is_dir() and _re.fullmatch(r'\d{4}_\d{2}', p.name)],
         key=lambda p: p.name
     )
     if not month_folders:
-        month_folders = [sam_base]  # fallback: files directly in sam_files/
+        month_folders = [sam_base]
 
     @st.cache_data(show_spinner=False)
     def _cached_sam_map(folder_str: str, mtime_key: str) -> dict:
-        _ = mtime_key  # cache-busting key; triggers reload when files change
+        _ = mtime_key
         return load_sam_from_folder(Path(folder_str))
 
     valid_exts = {'.docx', '.csv', '.txt'}
-    # Load each month folder → sam_maps_by_month = {yyyymm_int: sam_map}
     sam_maps_by_month = {}
     all_sam_file_paths = []
     for folder in month_folders:
@@ -2514,20 +2595,6 @@ def main():
         all_sam_file_paths.extend(file_paths)
         mtime_key = f'v5,{folder.name},' + ','.join(f'{p.name}:{p.stat().st_mtime}' for p in file_paths)
         sam_maps_by_month[yyyymm] = _cached_sam_map(str(folder), mtime_key)
-
-    if any(sam_maps_by_month.values()):
-        labels = [f.name for f in month_folders]
-        with st.expander(f'SAM Data Loaded: {", ".join(labels)} ({len(all_sam_file_paths)} files)', expanded=False):
-            for yyyymm, s_map in sorted(sam_maps_by_month.items()):
-                folder_label = f'{yyyymm // 100}_{yyyymm % 100:02d}' if yyyymm else 'fallback'
-                st.markdown(f'**[{folder_label}]**')
-                for model, codes in sorted(s_map.items()):
-                    st.write(f'• **{model}** — {len(codes)} codes')
-    else:
-        st.warning(
-            'No SAM .docx files found in `sam_files/YYYY_MM/`. '
-            'Please add files to the `sam_files/YYYY_MM/` folder in the GitHub repository.'
-        )
 
     # ── Exception codes (dynamic, stored in session state) ───────────────────
     _EXCEPT_PREFIXES = ('I', 'O', 'Z', 'U')
@@ -2546,91 +2613,103 @@ def main():
         key=lambda x: x[0],
     )
 
-    with st.expander(f'Exception Code List (excluded from comparison): {len(except_codes)} codes', expanded=False):
-        # ── + Add row ─────────────────────────────────────────────────────────
-        add_col1, add_col2, add_col3 = st.columns([1, 2, 0.5])
-        with add_col1:
-            _new_code = st.text_input('Code', key='_exc_new_code', placeholder='e.g. A1B', label_visibility='collapsed')
-        with add_col2:
-            _new_desc = st.text_input('Description', key='_exc_new_desc', placeholder='Description', label_visibility='collapsed')
-        with add_col3:
-            if st.button('+ Add', key='_exc_add_btn', type='primary'):
-                _nc = _new_code.strip().upper()
-                if _nc:
-                    st.session_state['_except_codes_set'].add(_nc)
-                    if _new_desc.strip():
-                        st.session_state['_except_custom_desc'][_nc] = _new_desc.strip()
-                    st.rerun()
+    # ══════════════════════════════════════════════════════════════════════════
+    #  SIDEBAR
+    # ══════════════════════════════════════════════════════════════════════════
+    with st.sidebar:
+        st.markdown('### SAM Data')
+        if any(sam_maps_by_month.values()):
+            labels = [f.name for f in month_folders]
+            st.success(f'{", ".join(labels)} — {len(all_sam_file_paths)} files loaded')
+            with st.expander('Details', expanded=False):
+                for yyyymm, s_map in sorted(sam_maps_by_month.items()):
+                    folder_label = f'{yyyymm // 100}_{yyyymm % 100:02d}' if yyyymm else 'fallback'
+                    st.markdown(f'**[{folder_label}]**')
+                    for model, codes in sorted(s_map.items()):
+                        st.write(f'• **{model}** — {len(codes)} codes')
+        else:
+            st.warning('No SAM .docx files found.')
 
-        # ── Search bar ────────────────────────────────────────────────────────
-        _exc_search = st.text_input('Search', key='_exc_search', placeholder='Search by code or description...', label_visibility='collapsed')
+        st.markdown('---')
+        st.markdown(f'### Exception Codes ({len(except_codes)})')
 
-        st.divider()
+        _new_code = st.text_input('Code', key='_exc_new_code', placeholder='e.g. A1B', label_visibility='collapsed')
+        _new_desc = st.text_input('Description', key='_exc_new_desc', placeholder='Description', label_visibility='collapsed')
+        if st.button('+ Add', key='_exc_add_btn', type='primary', use_container_width=True):
+            _nc = _new_code.strip().upper()
+            if _nc:
+                st.session_state['_except_codes_set'].add(_nc)
+                if _new_desc.strip():
+                    st.session_state['_except_custom_desc'][_nc] = _new_desc.strip()
+                st.rerun()
 
-        # ── Filter by search term ─────────────────────────────────────────────
+        _exc_search = st.text_input('Search', key='_exc_search', placeholder='Search codes...', label_visibility='collapsed')
+
         _filtered = except_codes
         if _exc_search and _exc_search.strip():
             _q = _exc_search.strip().upper()
             _filtered = [(c, d) for c, d in except_codes if _q in c.upper() or _q in d.upper()]
 
-        # ── 3 columns per row ─────────────────────────────────────────────────
-        for row_start in range(0, len(_filtered), 3):
-            row_items = _filtered[row_start:row_start + 3]
-            cols = st.columns(3)
-            for j, (code, desc) in enumerate(row_items):
-                with cols[j]:
-                    _c1, _c2 = st.columns([5, 1])
-                    _c1.markdown(f'`{code}` {desc}')
-                    if _c2.button('✕', key=f'_exc_del_{code}'):
-                        st.session_state['_except_codes_set'].discard(code)
-                        st.session_state['_except_custom_desc'].pop(code, None)
-                        st.rerun()
+        _exc_container = st.container(height=300)
+        with _exc_container:
+            for code, desc in _filtered:
+                _c1, _c2 = st.columns([5, 1])
+                _c1.markdown(f'`{code}` {desc}')
+                if _c2.button('✕', key=f'_exc_del_{code}'):
+                    st.session_state['_except_codes_set'].discard(code)
+                    st.session_state['_except_custom_desc'].pop(code, None)
+                    st.rerun()
 
-    # ── Search by Production Date ──────────────────────────────────────────────
-    st.subheader('Search by Production Date')
+        st.markdown('---')
+        st.markdown('### Production Date')
 
-    # 2024-01 ~ 내년 12월까지 월 옵션 생성
-    _today = date.today()
-    _month_opts = []
-    for _y in range(2024, _today.year + 2):
-        for _m in range(1, 13):
-            _month_opts.append(f'{_y}-{_m:02d}')
-    _month_opts = [m for m in _month_opts if m <= f'{_today.year + 1}-12']
+        _today = date.today()
+        _month_opts = []
+        for _y in range(2024, _today.year + 2):
+            for _m in range(1, 13):
+                _month_opts.append(f'{_y}-{_m:02d}')
+        _month_opts = [m for m in _month_opts if m <= f'{_today.year + 1}-12']
 
-    _sel_months = st.multiselect(
-        'Select Production Month(s)',
-        options=_month_opts,
-        default=[f'{_today.year}-{_today.month:02d}'],
-        key='wings_months',
-    )
+        _sel_months = st.multiselect(
+            'Select Month(s)',
+            options=_month_opts,
+            default=[f'{_today.year}-{_today.month:02d}'],
+            key='wings_months',
+        )
 
-    _col1, _col2 = st.columns([2, 1])
-    with _col1:
         _fetch_btn = st.button(
             'Auto-fetch from WINGS',
             key='wings_fetch_btn',
             type='primary',
             disabled=not _sel_months,
+            use_container_width=True,
         )
-    with _col2:
         if st.session_state.get('_wings_auto_name'):
             st.caption(f"Loaded: {st.session_state['_wings_auto_name']}")
-            if st.button('Clear', key='wings_clear'):
+            if st.button('Clear', key='wings_clear', use_container_width=True):
                 st.session_state.pop('_wings_auto_bytes', None)
                 st.session_state.pop('_wings_auto_name', None)
                 st.rerun()
 
+    # ── Handle Auto-fetch (main area) ─────────────────────────────────────────
     if _fetch_btn and _sel_months:
         if not _WINGS_AUTO:
-            st.warning('Auto-fetch requires the local environment with WINGS access. Please upload a WINGS file manually below.')
+            st.warning('Auto-fetch requires the local environment with WINGS access. Please upload a file manually below.')
         else:
+            _prog = st.progress(0, text='Connecting to WINGS...')
             _status_ph = st.empty()
-            _status_ph.info('Starting WINGS auto-download...')
+            _step_count = [0]
+            def _on_status(msg):
+                _step_count[0] += 1
+                _pct = min(_step_count[0] * 15, 90)
+                _prog.progress(_pct, text=msg)
+                _status_ph.info(msg)
             try:
                 _dl_path = _wings_fetch(
                     months=_sel_months,
-                    on_status=lambda msg: _status_ph.info(msg),
+                    on_status=_on_status,
                 )
+                _prog.progress(100, text='Download complete!')
                 with open(_dl_path, 'rb') as _f:
                     st.session_state['_wings_auto_bytes'] = _f.read()
                 st.session_state['_wings_auto_name'] = os.path.basename(_dl_path)
@@ -2638,15 +2717,14 @@ def main():
                 st.rerun()
             except Exception as _e:
                 import traceback as _tb
+                _prog.empty()
                 _status_ph.error(
                     f'Download failed: {type(_e).__name__}: {_e}\n\n'
                     f'```\n{_tb.format_exc()}\n```'
                 )
 
-    st.divider()
-    st.markdown('**Or upload a WINGS file directly:**')
-
-    wings_file = st.file_uploader('WINGS CSV/Excel File', type=['csv', 'xlsx', 'xls'])
+    # ── File uploader (main area) ─────────────────────────────────────────────
+    wings_file = st.file_uploader('Upload AFAB CSV/Excel File', type=['csv', 'xlsx', 'xls'])
 
     # 자동 다운로드된 파일이 있고 업로드된 파일이 없으면 자동 파일 사용
     if wings_file is None and st.session_state.get('_wings_auto_bytes'):
@@ -2655,12 +2733,9 @@ def main():
 
     if wings_file is not None:
         df_w = parse_wings(wings_file)
-        st.success(f'WINGS file loaded: {len(df_w)} rows')
+        st.success(f'AFAB file loaded: {len(df_w)} rows')
 
         comp = compare(df_w, sam_maps_by_month)
-
-        st.subheader('Summary')
-        st.metric('Total Commissions', len(comp))
 
         # ── Prepare data splits ──────────────────────────────────────────────
         cols_table = ['Commission no.', 'Baumuster', 'Until Dealine', 'Changeability Date',
@@ -2682,78 +2757,131 @@ def main():
             very_urgent = pd.DataFrame()
             urgent = pd.DataFrame()
 
-        # ── Section 1: Urgent Correction Needed (within 2 weeks) ─────────────
-        st.markdown('<h2 style="color:red">🚨 Changeability Date ≤ 2 weeks</h2>', unsafe_allow_html=True)
-        if not very_urgent.empty:
-            available = [c for c in cols_table if c in very_urgent.columns]
-            very_urgent_display = very_urgent[available].reset_index(drop=True)
-            st.markdown('<p style="color:#000000;font-weight:600;font-size:14px;margin:0 0 6px 0">Click a row to view option code details for the selected Commission.</p>', unsafe_allow_html=True)
-            vu_event = st.dataframe(
-                very_urgent_display.style.apply(_style_deadline, axis=None),
+        # ── KPI metric cards ─────────────────────────────────────────────────
+        _total = len(comp)
+        _mismatch = len(comp[
+            (comp.get('Only_in_SAM', pd.Series(dtype=str)).fillna('').str.strip() != '') |
+            (comp.get('Only_in_WINGS', pd.Series(dtype=str)).fillna('').str.strip() != '')
+        ]) if 'Only_in_SAM' in comp.columns else 0
+        _match = _total - _mismatch
+        _vu_count = len(very_urgent)
+
+        k1, k2, k3, k4 = st.columns(4)
+        with k1:
+            st.markdown(f'''<div class="kpi-card blue">
+                <p class="kpi-label">Total Commissions</p>
+                <p class="kpi-value">{_total}</p>
+            </div>''', unsafe_allow_html=True)
+        with k2:
+            st.markdown(f'''<div class="kpi-card red">
+                <p class="kpi-label">Mismatch</p>
+                <p class="kpi-value">{_mismatch}</p>
+            </div>''', unsafe_allow_html=True)
+        with k3:
+            st.markdown(f'''<div class="kpi-card green">
+                <p class="kpi-label">Match</p>
+                <p class="kpi-value">{_match}</p>
+            </div>''', unsafe_allow_html=True)
+        with k4:
+            st.markdown(f'''<div class="kpi-card orange">
+                <p class="kpi-label">Urgent (≤ 2 wks)</p>
+                <p class="kpi-value">{_vu_count}</p>
+            </div>''', unsafe_allow_html=True)
+
+        st.markdown('<br>', unsafe_allow_html=True)
+
+        # ── Tabbed results ───────────────────────────────────────────────────
+        tab1, tab2, tab3 = st.tabs([
+            f'🚨 Changeability Date ≤ 2 weeks ({_vu_count})',
+            f'📋 Changeability Date ≤ 60 days ({len(urgent)})',
+            f'📊 All Data ({_total})',
+        ])
+
+        with tab1:
+            if not very_urgent.empty:
+                available = [c for c in cols_table if c in very_urgent.columns]
+                very_urgent_display = very_urgent[available].reset_index(drop=True)
+                st.caption('Click a row to view option code details for the selected Commission.')
+                vu_event = st.dataframe(
+                    very_urgent_display.style.apply(_style_deadline, axis=None),
+                    on_select="rerun",
+                    selection_mode="single-row",
+                    use_container_width=True,
+                )
+                if vu_event.selection.rows:
+                    uidx = vu_event.selection.rows[0]
+                    urow = very_urgent_display.iloc[uidx]
+                    show_code_details(
+                        str(urow.get("Commission no.", "")),
+                        str(urow.get("Only_in_SAM", "")),
+                        str(urow.get("Only_in_WINGS", "")),
+                        str(urow.get("Exception Codes", "")),
+                    )
+                st.download_button(
+                    '📥 Download Urgent (≤ 2 weeks) Excel',
+                    data=to_excel_bytes(very_urgent_display),
+                    file_name='urgent_2weeks.xlsx',
+                    key='dl_very_urgent',
+                )
+            else:
+                st.success("No urgent corrections needed within 2 weeks.")
+
+        with tab2:
+            if not urgent.empty:
+                available = [c for c in cols_table if c in urgent.columns]
+                urgent_display = urgent[available].reset_index(drop=True)
+                st.caption('Click a row to view option code details for the selected Commission.')
+                u_event = st.dataframe(
+                    urgent_display.style.apply(_style_deadline, axis=None),
+                    on_select="rerun",
+                    selection_mode="single-row",
+                    use_container_width=True,
+                    key="df_60days",
+                )
+                if u_event.selection.rows:
+                    uidx = u_event.selection.rows[0]
+                    urow = urgent_display.iloc[uidx]
+                    show_code_details(
+                        str(urow.get("Commission no.", "")),
+                        str(urow.get("Only_in_SAM", "")),
+                        str(urow.get("Only_in_WINGS", "")),
+                        str(urow.get("Exception Codes", "")),
+                    )
+                st.download_button(
+                    '📥 Download Changeability (≤ 60 days) Excel',
+                    data=to_excel_bytes(urgent_display),
+                    file_name='changeability_60days.xlsx',
+                    key='dl_urgent',
+                )
+            else:
+                st.info("No corrections needed within 60 days.")
+
+        with tab3:
+            available_all = [c for c in cols_table if c in comp.columns]
+            all_display = comp[available_all].reset_index(drop=True)
+            st.caption('Click a row to view option code details for the selected Commission.')
+            all_event = st.dataframe(
+                all_display.style.apply(_style_deadline, axis=None),
                 on_select="rerun",
                 selection_mode="single-row",
                 use_container_width=True,
+                key="df_all",
             )
-            if vu_event.selection.rows:
-                uidx = vu_event.selection.rows[0]
-                urow = very_urgent_display.iloc[uidx]
+            if all_event.selection.rows:
+                aidx = all_event.selection.rows[0]
+                arow = all_display.iloc[aidx]
                 show_code_details(
-                    str(urow.get("Commission no.", "")),
-                    str(urow.get("Only_in_SAM", "")),
-                    str(urow.get("Only_in_WINGS", "")),
-                    str(urow.get("Exception Codes", "")),
+                    str(arow.get("Commission no.", "")),
+                    str(arow.get("Only_in_SAM", "")),
+                    str(arow.get("Only_in_WINGS", "")),
+                    str(arow.get("Exception Codes", "")),
                 )
             st.download_button(
-                '📥 Download Urgent (within 2 weeks) Excel',
-                data=to_excel_bytes(very_urgent_display),
-                file_name='urgent_2weeks.xlsx',
-                key='dl_very_urgent',
+                '📥 Download All Data Excel',
+                data=to_excel_bytes(comp),
+                file_name='afab_sam_comparison_all.xlsx',
+                key='dl_all',
             )
-        else:
-            st.success("No urgent corrections needed within 2 weeks.")
-
-        st.divider()
-
-        # ── Section 2: Changeability within 60 days ──────────────────────────
-        st.markdown('<h2 style="color:black">Changeability Date ≤ 60 days</h2>', unsafe_allow_html=True)
-        if not urgent.empty:
-            available = [c for c in cols_table if c in urgent.columns]
-            urgent_display = urgent[available].reset_index(drop=True)
-            st.markdown('<p style="color:#000000;font-weight:600;font-size:14px;margin:0 0 6px 0">Click a row to view option code details for the selected Commission.</p>', unsafe_allow_html=True)
-            u_event = st.dataframe(
-                urgent_display.style.apply(_style_deadline, axis=None),
-                on_select="rerun",
-                selection_mode="single-row",
-                use_container_width=True,
-                key="df_60days",
-            )
-            if u_event.selection.rows:
-                uidx = u_event.selection.rows[0]
-                urow = urgent_display.iloc[uidx]
-                show_code_details(
-                    str(urow.get("Commission no.", "")),
-                    str(urow.get("Only_in_SAM", "")),
-                    str(urow.get("Only_in_WINGS", "")),
-                    str(urow.get("Exception Codes", "")),
-                )
-            st.download_button(
-                '📥 Download Changeability (within 60 days) Excel',
-                data=to_excel_bytes(urgent_display),
-                file_name='changeability_60days.xlsx',
-                key='dl_urgent',
-            )
-        else:
-            st.info("No corrections needed within 60 days.")
-
-        st.divider()
-
-        # ── Overall Excel download ────────────────────────────────────────────
-        st.download_button(
-            '📥 Download All Data Excel',
-            data=to_excel_bytes(comp),
-            file_name='wings_sam_comparison_all.xlsx',
-            key='dl_all',
-        )
 
 
 if __name__ == '__main__':
