@@ -2614,7 +2614,7 @@ def main():
             urgent = pd.DataFrame()
 
         # ── Section 1: Urgent Correction Needed (within 2 weeks) ─────────────
-        st.markdown('<h2 style="color:red">🚨 Changeability within 2 weeks</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="color:red">🚨 Changeability ≤ 2 weeks</h2>', unsafe_allow_html=True)
         if not very_urgent.empty:
             available = [c for c in cols_table if c in very_urgent.columns]
             very_urgent_display = very_urgent[available].reset_index(drop=True)
@@ -2646,7 +2646,7 @@ def main():
         st.divider()
 
         # ── Section 2: Changeability within 60 days ──────────────────────────
-        st.markdown('<h2 style="color:black">Changeability within 60 days</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="color:black">Changeability ≤ 60 days</h2>', unsafe_allow_html=True)
         if not urgent.empty:
             available = [c for c in cols_table if c in urgent.columns]
             urgent_display = urgent[available].reset_index(drop=True)
