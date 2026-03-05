@@ -2454,7 +2454,7 @@ def main():
     if logo_file.exists():
         st.image(str(logo_file), width=280)
 
-    st.title('WINGS ↔ SAM Option Code Comparison Dashboard')
+    st.title('AFAB ↔ SAM Option Code Comparison Dashboard')
 
     st.markdown('Upload a WINGS CSV/Excel file to automatically compare with SAM data.')
 
