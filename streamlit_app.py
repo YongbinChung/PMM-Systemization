@@ -2320,7 +2320,7 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
             'Commission no.': com,
             'Baumuster': r.get('Baumuster', '') if 'Baumuster' in r.index else baumuster_num,
             'Model': str(r.get('Model', model_raw) if 'Model' in r.index else model_raw).replace('4140', '4440'),
-            'Model_norm': _normalize_model(r.get('Model') or r.get('Baumuster') or model_raw),
+            'SAM': _normalize_model(r.get('Model') or r.get('Baumuster') or model_raw),
             'Changeability Date': '',
             'Until Dealine': '',
             'Production date': r.get('Requested delivery date', '') if 'Requested delivery date' in r.index else '',
@@ -2389,7 +2389,7 @@ def to_excel_bytes(df: pd.DataFrame) -> bytes:
     towrite = io.BytesIO()
     with pd.ExcelWriter(towrite, engine='openpyxl') as writer:
         # Select key columns for output in desired order
-        output_cols = ['Commission no.', 'Baumuster', 'Model', 'Model_norm', 'Changeability Date',
+        output_cols = ['Commission no.', 'Baumuster', 'Model', 'SAM', 'Changeability Date',
                        'Until Dealine', 'Production date', 'Only_in_SAM', 'Only_in_WINGS', 'Exception Codes',
                        'Order status financial', 'Order status logistical', 'Gross equipment price (repricing)',
                        'Additional equipment (enumeration)', 'FIN', 'Subcategory (ID)',
@@ -2817,7 +2817,7 @@ def main():
 
         # ── Prepare data splits ──────────────────────────────────────────────
         cols_table = ['Commission no.', 'Baumuster', 'Until Dealine', 'Changeability Date',
-                      'Production date', 'Model', 'Model_norm', 'Only_in_SAM', 'Only_in_WINGS', 'Exception Codes', 'Compared SAM file name']
+                      'Production date', 'Model', 'SAM', 'Only_in_SAM', 'Only_in_WINGS', 'Exception Codes', 'Compared SAM file name']
 
         # Sort by Production date (earlier months first), then by Until Dealine
         if 'Production date' in comp.columns:
