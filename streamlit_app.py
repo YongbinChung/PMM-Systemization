@@ -2819,18 +2819,23 @@ def main():
         cols_table = ['Commission no.', 'Baumuster', 'Until Dealine', 'Changeability Date',
                       'Production date', 'Model', 'Model_norm', 'Only_in_SAM', 'Only_in_WINGS', 'Exception Codes', 'Compared SAM file name']
 
+        # Sort by Production date (earlier months first), then by Until Dealine
+        if 'Production date' in comp.columns:
+            comp['_prod_date_sort'] = pd.to_datetime(comp['Production date'], errors='coerce')
+            comp = comp.sort_values(['_prod_date_sort', 'Commission no.'], ascending=[True, True])
+
         if 'Until Dealine' in comp.columns:
             comp['_UntilDealine_days'] = pd.to_numeric(comp['Until Dealine'], errors='coerce')
             very_urgent = comp[
                 (comp['_UntilDealine_days'].notna()) &
                 (comp['_UntilDealine_days'] >= 0) &
                 (comp['_UntilDealine_days'] <= 14)
-            ].copy().sort_values('_UntilDealine_days', ascending=True)
+            ].copy().sort_values(['_prod_date_sort', '_UntilDealine_days'], ascending=[True, True])
             urgent = comp[
                 (comp['_UntilDealine_days'].notna()) &
                 (comp['_UntilDealine_days'] >= -30) &
                 (comp['_UntilDealine_days'] <= 60)
-            ].copy().sort_values('_UntilDealine_days', ascending=True)
+            ].copy().sort_values(['_prod_date_sort', '_UntilDealine_days'], ascending=[True, True])
         else:
             very_urgent = pd.DataFrame()
             urgent = pd.DataFrame()
