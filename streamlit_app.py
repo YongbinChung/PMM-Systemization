@@ -2298,7 +2298,7 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
         row_dict = {
             'Commission no.': com,
             'Baumuster': r.get('Baumuster', '') if 'Baumuster' in r.index else baumuster_num,
-            'Model': r.get('Model', model_raw) if 'Model' in r.index else model_raw,
+            'Model': str(r.get('Model', model_raw) if 'Model' in r.index else model_raw).replace('4140', '4440'),
             'Model_norm': _normalize_model(r.get('Model') or r.get('Baumuster') or model_raw),
             'Changeability Date': '',
             'Until Dealine': '',
