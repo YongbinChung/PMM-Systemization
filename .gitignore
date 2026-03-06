@@ -46,6 +46,7 @@ nul
 
 # Secrets (do not commit)
 config.yaml
+.totp_secret
 
 # VS Code
 .vscode/

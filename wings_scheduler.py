@@ -40,8 +40,25 @@ def get_future_months(months_ahead: int = 6) -> list:
     return months
 
 
-def _ask_auth_code() -> str:
-    """터미널에서 Microsoft Authenticator 코드를 입력받는다."""
+def _get_auth_code() -> str:
+    """TOTP 비밀키가 있으면 자동 생성, 없으면 터미널에서 입력받는다."""
+    secret_file = PROJECT_DIR / '.totp_secret'
+
+    # 1) 비밀키 파일이 있으면 자동 생성
+    if secret_file.exists():
+        try:
+            import pyotp
+            secret = secret_file.read_text().strip()
+            totp = pyotp.TOTP(secret)
+            code = totp.now()
+            print(f'  [TOTP 자동 생성: {code}]')
+            return code
+        except ImportError:
+            print('  pyotp가 설치되지 않았습니다. pip install pyotp')
+        except Exception as e:
+            print(f'  TOTP 자동 생성 실패: {e}')
+
+    # 2) 수동 입력 fallback
     print('\n' + '=' * 50)
     print('  Microsoft Authenticator 코드를 입력하세요')
     print('=' * 50)
@@ -68,7 +85,7 @@ def fetch_and_save(months: list) -> str | None:
             months=months,
             download_dir=str(WINGS_DATA_DIR),
             on_status=on_status,
-            auth_code_callback=_ask_auth_code,
+            auth_code_callback=_get_auth_code,
         )
         # Rename to standardized filename
         dl = Path(dl_path)
