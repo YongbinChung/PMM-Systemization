@@ -153,7 +153,7 @@ async def _set_all_row_connectors(page, connector: str = "or"):
         await page.wait_for_timeout(500)
 
 
-async def _wings_download_async(months: list, download_dir: str, on_status=None) -> str:
+async def _wings_download_async(months: list, download_dir: str, on_status=None, auth_code_callback=None) -> str:
 
     months_sorted = sorted(months)
     start_date = months_sorted[0] + "-01"
@@ -194,10 +194,63 @@ async def _wings_download_async(months: list, download_dir: str, on_status=None)
         status("WINGS에 접속 중...")
         await page.goto(WINGS_URL, wait_until="networkidle", timeout=30000)
 
-        # 로그인이 필요한 경우 (WingsAutomation 프로필 첫 사용 시)
-        if await page.locator("input[type='password']").count() > 0:
-            status("로그인이 필요합니다. 브라우저에서 직접 로그인해 주세요...")
-            await page.wait_for_selector("text=Extended search", timeout=180000)
+        # 로그인이 필요한 경우
+        login_needed = False
+        try:
+            login_needed = (
+                await page.locator("input[type='password']").count() > 0
+                or await page.locator("input[type='email']").count() > 0
+                or "login" in page.url.lower()
+                or "microsoftonline" in page.url.lower()
+            )
+        except Exception:
+            pass
+
+        if login_needed:
+            status("로그인이 필요합니다. 브라우저에서 아이디/비밀번호를 입력해 주세요...")
+
+            # 사용자가 이메일/비밀번호를 수동 입력할 때까지 대기
+            # Microsoft 2FA 코드 입력 화면이 나타나면 터미널에서 코드 입력 받기
+            for _ in range(360):  # 최대 3분 대기
+                # 이미 WINGS 메인 페이지에 도달했는지 확인
+                try:
+                    if await page.locator("text=Extended search").count() > 0:
+                        break
+                except Exception:
+                    pass
+
+                # Microsoft Authenticator 코드 입력 화면 감지
+                try:
+                    code_input = page.locator("input[name='otc'], input#idTxtBx_SAOTCC_OTC, input[aria-label*='code'], input[placeholder*='code']")
+                    if await code_input.count() > 0 and auth_code_callback:
+                        status("Authenticator 코드 입력 대기 중...")
+                        code = auth_code_callback()
+                        if code:
+                            await code_input.first.click()
+                            await code_input.first.fill(code.strip())
+                            await page.wait_for_timeout(500)
+                            # 확인 버튼 클릭
+                            verify_btn = page.locator("input[type='submit'], button[type='submit'], input#idSubmit_SAOTCC_Continue")
+                            if await verify_btn.count() > 0:
+                                await verify_btn.first.click()
+                            status("인증 코드 제출 완료. 로그인 진행 중...")
+                            await page.wait_for_timeout(3000)
+                            continue
+                except Exception:
+                    pass
+
+                await page.wait_for_timeout(500)
+
+            # "로그인 상태 유지" 화면 처리
+            try:
+                stay_signed = page.locator("input#idSIButton9, input[value='Yes'], button:has-text('Yes')")
+                if await stay_signed.count() > 0:
+                    await stay_signed.first.click()
+                    await page.wait_for_timeout(2000)
+            except Exception:
+                pass
+
+            await page.wait_for_selector("text=Extended search", timeout=60000)
             status("로그인 완료")
 
         # ── 2. Extended Search 진입 ────────────────────────────────────────────
@@ -726,7 +779,7 @@ def _write_debug(row_idx: int, log: list):
         pass
 
 
-def download_wings_excel(months: list, download_dir: str = None, on_status=None) -> str:
+def download_wings_excel(months: list, download_dir: str = None, on_status=None, auth_code_callback=None) -> str:
     """
     WINGS에서 Excel 파일을 동기적으로 다운로드한다.
 
@@ -768,7 +821,7 @@ def download_wings_excel(months: list, download_dir: str = None, on_status=None)
         loop = asyncio.ProactorEventLoop()
         try:
             return loop.run_until_complete(
-                _wings_download_async(months, download_dir, on_status)
+                _wings_download_async(months, download_dir, on_status, auth_code_callback)
             )
         finally:
             loop.close()

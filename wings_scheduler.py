@@ -40,6 +40,16 @@ def get_future_months(months_ahead: int = 6) -> list:
     return months
 
 
+def _ask_auth_code() -> str:
+    """터미널에서 Microsoft Authenticator 코드를 입력받는다."""
+    print('\n' + '=' * 50)
+    print('  Microsoft Authenticator 코드를 입력하세요')
+    print('=' * 50)
+    code = input('  코드 (6자리): ').strip()
+    print()
+    return code
+
+
 def fetch_and_save(months: list) -> str | None:
     """Fetch WINGS data for given months and save to wings_data/."""
     from wings_scraper import download_wings_excel
@@ -58,6 +68,7 @@ def fetch_and_save(months: list) -> str | None:
             months=months,
             download_dir=str(WINGS_DATA_DIR),
             on_status=on_status,
+            auth_code_callback=_ask_auth_code,
         )
         # Rename to standardized filename
         dl = Path(dl_path)
