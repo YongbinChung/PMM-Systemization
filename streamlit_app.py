@@ -1895,25 +1895,46 @@ def show_exception_codes():
         [(code, _exc_custom.get(code, OPTION_CODE_MAP.get(code, ''))) for code in _exc_set],
         key=lambda x: x[0],
     )
+
+    # Add code section
     st.markdown(f"**Total: {len(_all)} codes**")
+    _ac1, _ac2, _ac3 = st.columns([2, 3, 1])
+    with _ac1:
+        _new_code = st.text_input('Code', key='_exc_dlg_new_code', placeholder='e.g. A1B', label_visibility='collapsed')
+    with _ac2:
+        _new_desc = st.text_input('Description', key='_exc_dlg_new_desc', placeholder='Description', label_visibility='collapsed')
+    with _ac3:
+        if st.button('+ Add', key='_exc_dlg_add_btn', type='primary', use_container_width=True):
+            _nc = _new_code.strip().upper()
+            if _nc:
+                st.session_state['_except_codes_set'].add(_nc)
+                if _new_desc.strip():
+                    st.session_state['_except_custom_desc'][_nc] = _new_desc.strip()
+                st.rerun()
+
+    # Search
     _q = st.text_input('Search codes...', key='_exc_dialog_search', placeholder='Type code or description...')
     if _q and _q.strip():
         _qu = _q.strip().upper()
         _all = [(c, d) for c, d in _all if _qu in c.upper() or _qu in d.upper()]
         st.caption(f'{len(_all)} results')
     st.divider()
-    for i in range(0, len(_all), 3):
-        cols = st.columns(3)
-        for j, col in enumerate(cols):
-            if i + j < len(_all):
-                code, desc = _all[i + j]
-                with col:
-                    _cc1, _cc2 = st.columns([5, 1])
-                    _cc1.markdown(f'`{code}` {desc}')
-                    if _cc2.button('✕', key=f'_exc_dlg_del_{code}'):
-                        st.session_state['_except_codes_set'].discard(code)
-                        st.session_state['_except_custom_desc'].pop(code, None)
-                        st.rerun()
+
+    # Scrollable code list
+    _scroll = st.container(height=450)
+    with _scroll:
+        for i in range(0, len(_all), 3):
+            cols = st.columns(3)
+            for j, col in enumerate(cols):
+                if i + j < len(_all):
+                    code, desc = _all[i + j]
+                    with col:
+                        _cc1, _cc2 = st.columns([5, 1])
+                        _cc1.markdown(f'`{code}` {desc}')
+                        if _cc2.button('✕', key=f'_exc_dlg_del_{code}'):
+                            st.session_state['_except_codes_set'].discard(code)
+                            st.session_state['_except_custom_desc'].pop(code, None)
+                            st.rerun()
 
 
 def parse_wings(file) -> pd.DataFrame:
