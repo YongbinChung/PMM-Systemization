@@ -2011,21 +2011,70 @@ def show_mandatory_codes():
         st.caption(f'{len(_all)} results')
     st.divider()
 
-    # Scrollable code list
+    # Helper to render a code row with delete button
+    def _render_mand_row(code, desc):
+        _cc1, _cc2 = st.columns([5, 1])
+        _cc1.markdown(f'`{code}` {desc}')
+        if _cc2.button('✕', key=f'_mand_dlg_del_{code}'):
+            st.session_state['_mand_codes_set'].discard(code)
+            st.session_state['_mand_custom_desc'].pop(code, None)
+            st.rerun()
+
+    # Categorize codes
+    _all_vehicle = [(c, d) for c, d in _all if not any(x in d for x in ['Tractor', 'From 4-axle', 'Tipper'])]
+    _tractor = [(c, d) for c, d in _all if 'Tractor' in d]
+    _rigid = [(c, d) for c, d in _all if 'From 4-axle' in d and 'Tipper' not in d]
+    _tipper = [(c, d) for c, d in _all if 'Tipper' in d]
+    # Codes that don't fit any category (user-added)
+    _categorized = {c for c, _ in _all_vehicle + _tractor + _rigid + _tipper}
+    _other = [(c, d) for c, d in _all if c not in _categorized]
+
     _scroll = st.container(height=450)
     with _scroll:
-        for i in range(0, len(_all), 3):
-            cols = st.columns(3)
-            for j, col in enumerate(cols):
-                if i + j < len(_all):
-                    code, desc = _all[i + j]
-                    with col:
-                        _cc1, _cc2 = st.columns([5, 1])
-                        _cc1.markdown(f'`{code}` {desc}')
-                        if _cc2.button('✕', key=f'_mand_dlg_del_{code}'):
-                            st.session_state['_mand_codes_set'].discard(code)
-                            st.session_state['_mand_custom_desc'].pop(code, None)
-                            st.rerun()
+        if _all_vehicle:
+            st.markdown("**All Vehicle Mandatory**")
+            for i in range(0, len(_all_vehicle), 3):
+                cols = st.columns(3)
+                for j, col in enumerate(cols):
+                    if i + j < len(_all_vehicle):
+                        with col:
+                            _render_mand_row(*_all_vehicle[i + j])
+
+        if _tractor:
+            st.markdown("**Tractor Only (BM 963425, 964416, 963403)**")
+            for i in range(0, len(_tractor), 3):
+                cols = st.columns(3)
+                for j, col in enumerate(cols):
+                    if i + j < len(_tractor):
+                        with col:
+                            _render_mand_row(*_tractor[i + j])
+
+        if _rigid:
+            st.markdown("**Rigid Only (BM 964XXX)**")
+            for i in range(0, len(_rigid), 3):
+                cols = st.columns(3)
+                for j, col in enumerate(cols):
+                    if i + j < len(_rigid):
+                        with col:
+                            _render_mand_row(*_rigid[i + j])
+
+        if _tipper:
+            st.markdown("**Tipper Only (BM 964230, 964214)**")
+            for i in range(0, len(_tipper), 3):
+                cols = st.columns(3)
+                for j, col in enumerate(cols):
+                    if i + j < len(_tipper):
+                        with col:
+                            _render_mand_row(*_tipper[i + j])
+
+        if _other:
+            st.markdown("**Other (Custom)**")
+            for i in range(0, len(_other), 3):
+                cols = st.columns(3)
+                for j, col in enumerate(cols):
+                    if i + j < len(_other):
+                        with col:
+                            _render_mand_row(*_other[i + j])
 
 
 def parse_wings(file) -> pd.DataFrame:
