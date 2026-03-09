@@ -348,68 +348,227 @@ async def _wings_download_async(months: list, download_dir: str, on_status=None,
                 # ── MFA 방법 선택 화면 (Authenticator / Email) ──
                 if not mfa_method_selected:
                     try:
-                        mfa_page = await page.evaluate(
-                            """() => {
-                                const text = document.body.innerText || '';
-                                if (text.includes('Multi Factor Authentication Method Selection')) {
-                                    // Authenticator 라디오 버튼 선택
-                                    const radios = document.querySelectorAll('input[type="radio"]');
-                                    for (const r of radios) {
-                                        const label = r.parentElement ? r.parentElement.textContent : '';
-                                        if (label.includes('Authenticator')) {
-                                            r.checked = true;
-                                            r.click();
-                                            break;
-                                        }
-                                    }
-                                    // Continue 버튼 클릭
-                                    const btns = document.querySelectorAll('button, input[type="submit"]');
-                                    for (const b of btns) {
-                                        if ((b.textContent || b.value || '').trim() === 'Continue') {
-                                            b.click();
-                                            return true;
-                                        }
-                                    }
-                                }
-                                return false;
-                            }"""
+                        has_mfa_selection = await page.evaluate(
+                            """() => (document.body.innerText || '').includes('Multi Factor Authentication Method Selection')"""
                         )
-                        if mfa_page:
-                            status("MFA 방법 선택: Authenticator → Continue 클릭, 코드 화면 대기 (3초)...")
+                        if has_mfa_selection:
+                            # "Email" 텍스트 클릭 (라디오 라벨)
+                            await page.get_by_text("Email", exact=True).click()
+                            await page.wait_for_timeout(500)
+                            # Continue 버튼 클릭
+                            await page.get_by_role("button", name="Continue").click()
+                            status("MFA 방법 선택: Email → Continue 클릭, 이메일 인증 화면 대기 (3초)...")
                             mfa_method_selected = True
                             await page.wait_for_timeout(3000)
                             continue
                     except Exception:
                         pass
 
-                # ── Verification Code 6자리 개별 입력칸 ──
+                # ── Email MFA: "Send new verification code" 클릭 → Outlook에서 코드 읽기 ──
                 if not auth_code_used:
                     try:
-                        has_verify = await page.evaluate(
+                        has_email_mfa = await page.evaluate(
                             """() => {
                                 const text = document.body.innerText || '';
-                                return text.includes('Verification Code') || text.includes('verification code');
+                                return text.includes('Multi Factor Authentication email Verification')
+                                    || text.includes('Send verification code')
+                                    || text.includes('Send new verification code');
                             }"""
                         )
-                        if has_verify and auth_code_callback:
-                            status("Authenticator 코드 자동 입력 중...")
-                            code = auth_code_callback()
-                            if code and len(code) == 6:
-                                # 첫 번째 입력칸 클릭 후 키보드로 6자리 직접 타이핑
-                                first_input = page.locator('input[maxlength="1"]').first
-                                await first_input.click()
-                                await page.wait_for_timeout(300)
-                                for digit in code.strip():
-                                    await page.keyboard.press(digit)
-                                    await page.wait_for_timeout(100)
+                        if has_email_mfa:
+                            # "Send verification code" 버튼이 보일 때까지 대기 후 클릭
+                            status("이메일 인증 코드 요청 중... (버튼 대기)")
+                            # aria-hidden 해제 대기 → JS로 직접 클릭
+                            await page.wait_for_timeout(2000)
+                            clicked = await page.evaluate(
+                                """() => {
+                                    const btns = document.querySelectorAll('button');
+                                    for (const b of btns) {
+                                        const txt = (b.textContent || '').trim();
+                                        if (txt === 'Send verification code' || txt === 'Send new verification code') {
+                                            b.removeAttribute('aria-hidden');
+                                            b.style.display = '';
+                                            b.click();
+                                            return txt;
+                                        }
+                                    }
+                                    return null;
+                                }"""
+                            )
+                            status(f"Send 버튼 클릭 결과: {clicked}")
+                            await page.wait_for_timeout(3000)
+                            status("인증 이메일 발송됨. Outlook Web에서 코드 읽는 중 (최대 3분 대기)...")
+
+                            # Outlook Web 새 탭 열기
+                            outlook_page = await ctx.new_page()
+                            await outlook_page.goto("https://outlook.office.com/mail/")
+                            await outlook_page.wait_for_load_state("domcontentloaded")
+                            await outlook_page.wait_for_timeout(3000)
+
+                            # Outlook 로그인 처리 (Microsoft → Hyosung 리다이렉트 플로우)
+                            email_addr, email_pw = _load_credentials()
+                            status(f"Outlook URL: {outlook_page.url}")
+
+                            for _login_step in range(15):
+                                await outlook_page.wait_for_timeout(1000)
+                                current_url = outlook_page.url
+                                status(f"Outlook 로그인 단계 {_login_step+1}: {current_url[:80]}")
+
+                                # 이미 Outlook 메일함에 도달했으면 종료
+                                if 'outlook.office' in current_url and '/mail' in current_url:
+                                    status("Outlook 로그인 완료!")
+                                    break
+
+                                # Microsoft 로그인 페이지
+                                if 'login.microsoftonline.com' in current_url or 'login.microsoft.com' in current_url:
+                                    # 계정 선택 화면 (prompt=select_account): 계정 클릭
+                                    try:
+                                        account_tile = outlook_page.locator(f'[data-test-id*="{email_addr}"], div[data-test-id*="yongbin"]')
+                                        if await account_tile.count() > 0 and await account_tile.first.is_visible():
+                                            status("Outlook: 계정 선택 화면 → 계정 클릭")
+                                            await account_tile.first.click()
+                                            await outlook_page.wait_for_timeout(3000)
+                                            continue
+                                    except Exception:
+                                        pass
+
+                                    # "다른 계정 사용" / "Use another account" 처리
+                                    try:
+                                        other_acct = outlook_page.locator('#otherTile, [data-test-id="otherTile"]')
+                                        if await other_acct.count() > 0 and await other_acct.is_visible():
+                                            status("Outlook: '다른 계정 사용' 클릭")
+                                            await other_acct.click()
+                                            await outlook_page.wait_for_timeout(2000)
+                                            continue
+                                    except Exception:
+                                        pass
+
+                                    # 1단계: 이메일 입력 화면
+                                    email_input = outlook_page.locator('input[type="email"], input[name="loginfmt"]')
+                                    if await email_input.count() > 0 and await email_input.first.is_visible():
+                                        status("Outlook: 이메일 입력 중...")
+                                        await email_input.first.fill(email_addr)
+                                        await outlook_page.wait_for_timeout(300)
+                                        submit_btn = outlook_page.locator('input[type="submit"]')
+                                        if await submit_btn.count() > 0:
+                                            await submit_btn.click()
+                                        else:
+                                            await outlook_page.keyboard.press("Enter")
+                                        # Hyosung 비밀번호 화면 대기
+                                        try:
+                                            await outlook_page.wait_for_selector(
+                                                'input[type="password"], input[name="passwd"], input[name="Password"]',
+                                                timeout=10000
+                                            )
+                                        except Exception:
+                                            await outlook_page.wait_for_timeout(2000)
+                                        continue
+
+                                    # 2단계: 비밀번호 입력 화면 (Hyosung 페이지) — 빠르게!
+                                    pw_input = outlook_page.locator('input[type="password"], input[name="passwd"], input[name="Password"]')
+                                    if await pw_input.count() > 0 and await pw_input.first.is_visible():
+                                        status("Outlook: 비밀번호 입력 중 (빠르게)...")
+                                        await pw_input.first.fill(email_pw)
+                                        await outlook_page.wait_for_timeout(200)
+                                        sign_in_btn = outlook_page.locator('input[type="submit"], button[type="submit"]')
+                                        if await sign_in_btn.count() > 0:
+                                            await sign_in_btn.first.click()
+                                        else:
+                                            await outlook_page.keyboard.press("Enter")
+                                        await outlook_page.wait_for_timeout(3000)
+                                        continue
+
+                                    # 3단계: "Stay signed in?" / "로그인 상태 유지?" 화면
+                                    yes_btn = outlook_page.locator('input[value="Yes"], input[value="예"], button:has-text("Yes"), button:has-text("예")')
+                                    if await yes_btn.count() > 0 and await yes_btn.first.is_visible():
+                                        status("Outlook: 로그인 상태 유지 → 예")
+                                        await yes_btn.first.click()
+                                        await outlook_page.wait_for_timeout(3000)
+                                        continue
+
+                                # 알 수 없는 페이지 → 대기
+                                await outlook_page.wait_for_timeout(2000)
+
+                            await outlook_page.wait_for_timeout(3000)
+                            status("Outlook Web 로드 완료. 인증 이메일 검색 중...")
+
+                            # 먼저 기존 이메일의 코드를 수집 (이전 코드 무시용)
+                            old_codes = set()
+                            try:
+                                old_codes_list = await outlook_page.evaluate(
+                                    """() => {
+                                        const codes = [];
+                                        const allText = document.body.innerText || '';
+                                        const matches = allText.matchAll(/(\\d{6})\\s*-\\s*Your Daimler Truck Business ID MFA/g);
+                                        for (const m of matches) codes.push(m[1]);
+                                        return codes;
+                                    }"""
+                                )
+                                old_codes = set(old_codes_list or [])
+                                status(f"기존 인증 코드 {len(old_codes)}개 무시: {old_codes}")
+                            except Exception:
+                                pass
+
+                            # 이메일에서 새 인증 코드 추출 (최대 3분 대기)
+                            email_code = None
+                            for attempt in range(36):  # 36 * 5초 = 3분
+                                try:
+                                    found_codes = await outlook_page.evaluate(
+                                        """() => {
+                                            const codes = [];
+                                            // 이메일 목록에서 모든 6자리 코드 추출
+                                            const allText = document.body.innerText || '';
+                                            const matches = allText.matchAll(/(\\d{6})\\s*-\\s*Your Daimler Truck Business ID MFA/g);
+                                            for (const m of matches) codes.push(m[1]);
+                                            // aria-label에서도 추출
+                                            const subjects = document.querySelectorAll('[aria-label*="MFA Email Verification"], [title*="MFA Email Verification"]');
+                                            for (const el of subjects) {
+                                                const text = el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent || '';
+                                                const match = text.match(/^(\\d{6})\\s*-/);
+                                                if (match) codes.push(match[1]);
+                                            }
+                                            return [...new Set(codes)];
+                                        }"""
+                                    )
+                                    # 기존 코드 제외하고 새 코드만 사용
+                                    new_codes = [c for c in (found_codes or []) if c not in old_codes]
+                                    if new_codes:
+                                        email_code = new_codes[0]
+                                        status(f"새 인증 코드 발견: {email_code} (기존 제외: {old_codes})")
+                                        break
+                                    elif found_codes:
+                                        status(f"대기 중... 발견된 코드 {found_codes}는 이전 코드임 (attempt {attempt+1})")
+                                except Exception as e:
+                                    status(f"이메일 검색 오류: {e}")
+
+                                # 새로고침하고 다시 시도
+                                if attempt % 3 == 2:
+                                    status(f"Outlook 새로고침 중... (attempt {attempt+1})")
+                                    await outlook_page.reload()
+                                    await outlook_page.wait_for_timeout(5000)
+                                else:
+                                    await outlook_page.wait_for_timeout(5000)
+
+                            # Outlook 탭 닫기
+                            await outlook_page.close()
+
+                            if email_code and len(email_code) == 6:
+                                # WINGS 페이지로 돌아가서 코드 입력
+                                status(f"인증 코드 {email_code} 입력 중...")
+                                code_input = page.locator('input[placeholder="Verification Code"]')
+                                await code_input.click()
+                                await code_input.fill(email_code)
                                 await page.wait_for_timeout(500)
-                                # Verify 버튼 클릭
-                                await page.get_by_role("button", name="Verify").click()
-                                status("인증 코드 제출 완료. 로그인 진행 중...")
+                                # "Verify code" 버튼 클릭
+                                await page.get_by_role("button", name="Verify code").click()
+                                status("이메일 인증 코드 제출 완료. 로그인 진행 중...")
                                 auth_code_used = True
                                 await page.wait_for_timeout(5000)
                                 continue
-                    except Exception:
+                            else:
+                                status("이메일에서 인증 코드를 찾지 못했습니다.")
+                    except Exception as e:
+                        status(f"이메일 MFA 처리 중 오류: {e}")
                         pass
 
                 # "로그인 상태 유지" 화면 처리
