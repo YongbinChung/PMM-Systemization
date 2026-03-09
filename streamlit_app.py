@@ -3026,7 +3026,7 @@ def main():
             ].copy().sort_values(['_prod_date_sort', '_UntilDealine_days'], ascending=[True, True])
             urgent = comp[
                 (comp['_UntilDealine_days'].notna()) &
-                (comp['_UntilDealine_days'] >= -30) &
+                (comp['_UntilDealine_days'] >= 0) &
                 (comp['_UntilDealine_days'] <= 60)
             ].copy().sort_values(['_prod_date_sort', '_UntilDealine_days'], ascending=[True, True])
         else:
