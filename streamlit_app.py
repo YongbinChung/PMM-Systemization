@@ -2321,6 +2321,7 @@ def _normalize_model(model: str) -> str:
     # Apply historic mappings (4153->3253, etc)
     historic = {
         '4153': '3253',
+        '4140': '4440',
         '2851': '2651',
         '2135': '1835',
         '2863': '2663',
@@ -2639,7 +2640,7 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
             'Type': _axle_type,
             'Cab': _cab_code,
             'PTO': _pto_flag,
-            'Model(SAM)': re.sub(r'DNA$', '', re.sub(r'[^A-Z0-9]', '', str(r.get('Model') or r.get('Baumuster') or model_raw).upper().strip())),
+            'Model(SAM)': re.sub(r'DNA$', '', re.sub(r'[^A-Z0-9]', '', str(r.get('Model') or r.get('Baumuster') or model_raw).upper().strip())).replace('4140', '4440'),
             'Changeability Date': '',
             'Until Dealine': '',
             'Production date': r.get('Requested delivery date', '') if 'Requested delivery date' in r.index else '',
