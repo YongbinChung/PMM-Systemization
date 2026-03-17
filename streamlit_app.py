@@ -2064,21 +2064,40 @@ def show_sam_file_codes():
     if not _mapping:
         st.warning('No codes extracted from this file.')
         return
+    _mand_set = st.session_state.get('_mand_codes_set', set(MANDATORY_CODES.keys()))
+    _exc_set = st.session_state.get('_except_codes_set', set())
+
+    def _render_code_section(title, code_list, color):
+        if not code_list:
+            return
+        st.markdown(f"**{title}** ({len(code_list)})")
+        cols = st.columns(4)
+        for i, code in enumerate(sorted(code_list)):
+            desc = OPTION_CODE_MAP.get(code, '')
+            cols[i % 4].markdown(
+                f"<span style='color:{color};font-weight:600;font-size:14px'>{code}</span>"
+                f"&nbsp; <span style='font-size:13px'>{desc}</span>",
+                unsafe_allow_html=True
+            )
+
     for model_key, pto_dict in _mapping.items():
         for is_pto, data in pto_dict.items():
             codes = sorted(data['codes'])
             pto_label = 'PTO' if is_pto else 'non-PTO'
-            st.markdown(f"**Model:** `{model_key}` ({pto_label}) — **{len(codes)} codes**")
+            st.markdown(f"**Model:** `{model_key}` ({pto_label}) — **{len(codes)} codes total**")
             st.markdown("---")
-            # Display in 4 columns
-            cols = st.columns(4)
-            for i, code in enumerate(codes):
-                desc = OPTION_CODE_MAP.get(code, '')
-                cols[i % 4].markdown(
-                    f"<span style='color:#1a5276;font-weight:600;font-size:14px'>{code}</span>"
-                    f"&nbsp; <span style='font-size:13px'>{desc}</span>",
-                    unsafe_allow_html=True
-                )
+
+            mand_codes = [c for c in codes if c in _mand_set]
+            prod_codes = [c for c in codes if c in _exc_set]
+            other_codes = [c for c in codes if c not in _mand_set and c not in _exc_set]
+
+            _render_code_section("🔴 Mandatory Codes", mand_codes, "#c0392b")
+            if mand_codes:
+                st.markdown("---")
+            _render_code_section("🔧 Production Codes", prod_codes, "#e67e22")
+            if prod_codes:
+                st.markdown("---")
+            _render_code_section("📋 Other Codes", other_codes, "#1a5276")
 
 
 @st.dialog("Production Codes List", width="large")
