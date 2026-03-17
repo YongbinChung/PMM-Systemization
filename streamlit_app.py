@@ -2044,6 +2044,43 @@ def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_s
         )
 
 
+@st.dialog("SAM File Code Verification", width="large")
+def show_sam_file_codes():
+    fpath = st.session_state.get('_sam_view_file', '')
+    if not fpath:
+        st.warning('No file selected.')
+        return
+    fp = Path(fpath)
+    st.markdown(f"**File:** {fp.name}")
+    st.markdown("---")
+    # Parse the file
+    _mapping = {}
+    try:
+        with open(fp, 'rb') as f:
+            _parse_single_sam_file(f, fp.name, _mapping)
+    except Exception as e:
+        st.error(f'Parse error: {e}')
+        return
+    if not _mapping:
+        st.warning('No codes extracted from this file.')
+        return
+    for model_key, pto_dict in _mapping.items():
+        for is_pto, data in pto_dict.items():
+            codes = sorted(data['codes'])
+            pto_label = 'PTO' if is_pto else 'non-PTO'
+            st.markdown(f"**Model:** `{model_key}` ({pto_label}) — **{len(codes)} codes**")
+            st.markdown("---")
+            # Display in 4 columns
+            cols = st.columns(4)
+            for i, code in enumerate(codes):
+                desc = OPTION_CODE_MAP.get(code, '')
+                cols[i % 4].markdown(
+                    f"<span style='color:#1a5276;font-weight:600;font-size:14px'>{code}</span>"
+                    f"&nbsp; <span style='font-size:13px'>{desc}</span>",
+                    unsafe_allow_html=True
+                )
+
+
 @st.dialog("Production Codes List", width="large")
 def show_exception_codes():
     st.markdown("""<style>
@@ -3135,11 +3172,14 @@ def main():
                             _save_path.write_bytes(_uf.read())
                         st.rerun()
 
-                    # List files with delete buttons
+                    # List files with view-codes and delete buttons
                     for _fp in _mfiles:
-                        _fc1, _fc2 = st.columns([5, 1])
+                        _fc1, _fc2, _fc3 = st.columns([5, 1, 1])
                         _fc1.caption(_fp.name)
-                        if _fc2.button('✕', key=f'_sam_del_{_mdir.name}_{_fp.name}'):
+                        if _fc2.button('🔍', key=f'_sam_view_{_mdir.name}_{_fp.name}', help='View codes'):
+                            st.session_state['_sam_view_file'] = str(_fp)
+                            show_sam_file_codes()
+                        if _fc3.button('✕', key=f'_sam_del_{_mdir.name}_{_fp.name}'):
                             _fp.unlink()
                             st.rerun()
                     if not _mfiles:
