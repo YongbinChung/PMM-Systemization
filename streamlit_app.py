@@ -2497,8 +2497,7 @@ def load_sam_from_folder(folder: Path) -> dict:
     # the reverse of _normalize_model's historic mappings so WINGS models
     # (which use newer numbering) can find SAM data (which uses older numbering).
     _reverse_prefixes = {
-        '3253': ['4153', '4453'],   # SAM 3253 <- WINGS 4153, 4453
-        '4153': ['4453'],           # SAM 4153 <- WINGS 4453
+        '3253': ['4153'],   # SAM 3253 <- WINGS 4153
     }
     existing_keys = list(mapping.keys())
     for key in existing_keys:
@@ -2799,7 +2798,8 @@ def main():
         padding-top: 0rem !important;
     }
     header[data-testid="stHeader"] {
-        display: none !important;
+        background: transparent !important;
+        height: 2.5rem !important;
     }
 
     /* Page background */
