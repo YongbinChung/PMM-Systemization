@@ -44,6 +44,15 @@ npm
 nul
 "## Chat Customization Diagnostics.md"
 
+# Local-only automation scripts (not for cloud)
+wings_scraper.py
+wings_scheduler.py
+setup_totp.py
+auto_fetch_wings.py
+auto_fetch_wings.bat
+auto_fetch_wings.vbs
+auto_fetch_wings.log
+
 # Secrets (do not commit)
 config.yaml
 .totp_secret
