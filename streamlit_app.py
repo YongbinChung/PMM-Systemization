@@ -2794,6 +2794,7 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
             '_all_wings_codes': ','.join(sorted(wings_codes)),
             '_all_sam_codes': ','.join(sorted(sam_codes)),
             'Compared SAM file name': sam_file,
+            'SAM Status': 'Match' if (sam_codes and not only_s_display and not only_w_display) else ('Mismatch' if sam_codes else 'No SAM'),
         }
         
         # compute days until deadline (Vehicle alterable until)
@@ -2840,7 +2841,9 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
 
 
 def _style_deadline(df: pd.DataFrame) -> pd.DataFrame:
-    """Return same-shape DataFrame of CSS strings; colour passed-deadline cells red."""
+    """Return same-shape DataFrame of CSS strings; colour passed-deadline cells red.
+    NOTE: kept for Excel export styling; not used for st.dataframe (plain DF needed for row-click).
+    """
     styles = pd.DataFrame('', index=df.index, columns=df.columns)
     if 'Until Dealine' in df.columns:
         deadline_num = pd.to_numeric(df['Until Dealine'], errors='coerce')
@@ -2850,6 +2853,10 @@ def _style_deadline(df: pd.DataFrame) -> pd.DataFrame:
             if col in df.columns:
                 styles.loc[mask_passed, col] = 'color: red; font-weight: bold'
                 styles.loc[mask_orange, col] = 'color: orange; font-weight: bold'
+    if 'SAM Status' in df.columns:
+        styles.loc[df['SAM Status'] == 'Match', 'SAM Status'] = 'background-color: #d4edda; color: #155724; font-weight: bold; border-radius: 4px; text-align: center'
+        styles.loc[df['SAM Status'] == 'Mismatch', 'SAM Status'] = 'background-color: #f8d7da; color: #721c24; font-weight: bold; border-radius: 4px; text-align: center'
+        styles.loc[df['SAM Status'] == 'No SAM', 'SAM Status'] = 'background-color: #e2e3e5; color: #383d41; font-weight: bold; border-radius: 4px; text-align: center'
     return styles
 
 
@@ -2861,7 +2868,7 @@ def to_excel_bytes(df: pd.DataFrame) -> bytes:
                        'Until Dealine', 'Production date', 'Only_in_SAM', 'Only_in_WINGS', 'Production Codes',
                        'Order status financial', 'Order status logistical', 'Gross equipment price (repricing)',
                        'Additional equipment (enumeration)', 'FIN', 'Subcategory (ID)',
-                       'Requested delivery date', 'Compared SAM file name']
+                       'Requested delivery date', 'Compared SAM file name', 'SAM Status']
         available_cols = [c for c in output_cols if c in df.columns]
         df[available_cols].to_excel(writer, index=False, sheet_name='comparison')
         ws = writer.sheets['comparison']
@@ -3375,7 +3382,7 @@ def main():
 
         # ── Prepare data splits ──────────────────────────────────────────────
         cols_table = ['Commission no.', 'Baumuster', 'Until Dealine', 'Changeability Date',
-                      'Production date', 'Vehicle', 'Model(WINGS)', 'Type', 'Cab', 'PTO', 'Model(SAM)', 'Only_in_SAM', 'Only_in_WINGS', 'Mandatory Codes', 'Production Codes', 'Compared SAM file name']
+                      'Production date', 'Vehicle', 'Model(WINGS)', 'Type', 'Cab', 'PTO', 'Model(SAM)', 'Only_in_SAM', 'Only_in_WINGS', 'Mandatory Codes', 'Production Codes', 'Compared SAM file name', 'SAM Status']
         _hidden_cols = ['_all_wings_codes', '_all_sam_codes']
 
         # Sort by Production date (earlier months first), then by Until Dealine
@@ -3440,35 +3447,45 @@ def main():
             f'📊 All Data ({_total})',
         ])
 
+        def _render_tab(display_df, available_cols, tab_key, dl_label, dl_filename, empty_msg=None):
+            """Render a dataframe tab with checkbox row selection."""
+            if display_df.empty:
+                if empty_msg:
+                    st.info(empty_msg)
+                return
+            st.caption('Select a row using the checkbox on the left to view option code details.')
+            event = st.dataframe(
+                display_df[available_cols].style.apply(_style_deadline, axis=None),
+                on_select="rerun",
+                selection_mode="single-row",
+                use_container_width=True,
+                key=f"df_{tab_key}",
+            )
+            if event.selection.rows:
+                idx = event.selection.rows[0]
+                row = display_df.iloc[idx]
+                show_code_details(
+                    str(row.get("Commission no.", "")),
+                    str(row.get("Only_in_SAM", "")),
+                    str(row.get("Only_in_WINGS", "")),
+                    str(row.get("Production Codes", "")),
+                    str(row.get("_all_wings_codes", "")),
+                    str(row.get("_all_sam_codes", "")),
+                )
+            st.download_button(
+                f'📥 {dl_label}',
+                data=to_excel_bytes(display_df),
+                file_name=dl_filename,
+                key=f'dl_{tab_key}',
+            )
+
         with tab1:
             if not very_urgent.empty:
                 available = [c for c in cols_table if c in very_urgent.columns]
                 available_with_hidden = available + [c for c in _hidden_cols if c in very_urgent.columns]
                 very_urgent_display = very_urgent[available_with_hidden].reset_index(drop=True)
-                st.caption('Click any cell in a row to view option code details for the selected Commission.')
-                vu_event = st.dataframe(
-                    very_urgent_display[available].style.apply(_style_deadline, axis=None),
-                    on_select="rerun",
-                    selection_mode="single-row",
-                    use_container_width=True,
-                )
-                if vu_event.selection.rows:
-                    uidx = vu_event.selection.rows[0]
-                    urow = very_urgent_display.iloc[uidx]
-                    show_code_details(
-                        str(urow.get("Commission no.", "")),
-                        str(urow.get("Only_in_SAM", "")),
-                        str(urow.get("Only_in_WINGS", "")),
-                        str(urow.get("Production Codes", "")),
-                        str(urow.get("_all_wings_codes", "")),
-                        str(urow.get("_all_sam_codes", "")),
-                    )
-                st.download_button(
-                    '📥 Download Urgent (≤ 2 weeks) Excel',
-                    data=to_excel_bytes(very_urgent_display),
-                    file_name='urgent_2weeks.xlsx',
-                    key='dl_very_urgent',
-                )
+                _render_tab(very_urgent_display, available, 'very_urgent',
+                            'Download Urgent (≤ 2 weeks) Excel', 'urgent_2weeks.xlsx')
             else:
                 st.success("No urgent corrections needed within 2 weeks.")
 
@@ -3477,31 +3494,8 @@ def main():
                 available = [c for c in cols_table if c in urgent.columns]
                 available_with_hidden = available + [c for c in _hidden_cols if c in urgent.columns]
                 urgent_display = urgent[available_with_hidden].reset_index(drop=True)
-                st.caption('Click any cell in a row to view option code details for the selected Commission.')
-                u_event = st.dataframe(
-                    urgent_display[available].style.apply(_style_deadline, axis=None),
-                    on_select="rerun",
-                    selection_mode="single-row",
-                    use_container_width=True,
-                    key="df_60days",
-                )
-                if u_event.selection.rows:
-                    uidx = u_event.selection.rows[0]
-                    urow = urgent_display.iloc[uidx]
-                    show_code_details(
-                        str(urow.get("Commission no.", "")),
-                        str(urow.get("Only_in_SAM", "")),
-                        str(urow.get("Only_in_WINGS", "")),
-                        str(urow.get("Production Codes", "")),
-                        str(urow.get("_all_wings_codes", "")),
-                        str(urow.get("_all_sam_codes", "")),
-                    )
-                st.download_button(
-                    '📥 Download Changeability (≤ 60 days) Excel',
-                    data=to_excel_bytes(urgent_display),
-                    file_name='changeability_60days.xlsx',
-                    key='dl_urgent',
-                )
+                _render_tab(urgent_display, available, '60days',
+                            'Download Changeability (≤ 60 days) Excel', 'changeability_60days.xlsx')
             else:
                 st.info("No corrections needed within 60 days.")
 
@@ -3509,31 +3503,8 @@ def main():
             available_all = [c for c in cols_table if c in comp.columns]
             available_all_with_hidden = available_all + [c for c in _hidden_cols if c in comp.columns]
             all_display = comp[available_all_with_hidden].reset_index(drop=True)
-            st.caption('Click any cell in a row to view option code details for the selected Commission.')
-            all_event = st.dataframe(
-                all_display[available_all].style.apply(_style_deadline, axis=None),
-                on_select="rerun",
-                selection_mode="single-row",
-                use_container_width=True,
-                key="df_all",
-            )
-            if all_event.selection.rows:
-                aidx = all_event.selection.rows[0]
-                arow = all_display.iloc[aidx]
-                show_code_details(
-                    str(arow.get("Commission no.", "")),
-                    str(arow.get("Only_in_SAM", "")),
-                    str(arow.get("Only_in_WINGS", "")),
-                    str(arow.get("Production Codes", "")),
-                    str(arow.get("_all_wings_codes", "")),
-                    str(arow.get("_all_sam_codes", "")),
-                )
-            st.download_button(
-                '📥 Download All Data Excel',
-                data=to_excel_bytes(comp),
-                file_name='afab_sam_comparison_all.xlsx',
-                key='dl_all',
-            )
+            _render_tab(all_display, available_all, 'all',
+                        'Download All Data Excel', 'afab_sam_comparison_all.xlsx')
 
 
 if __name__ == '__main__':
