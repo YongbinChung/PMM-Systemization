@@ -2968,7 +2968,7 @@ def main():
     .header-bar .title {
         color: #ffffff;
         font-size: 2.1rem;
-        font-weight: 700;
+        font-weight: normal;
         letter-spacing: 0.5px;
     }
     .header-bar .subtitle {
@@ -3128,7 +3128,7 @@ def main():
     <div class="header-bar">
         {_logo_html}
         <div>
-            <div class="title">ASCD <span style="font-size:0.45em; font-weight:normal; opacity:0.85; margin-left:10px;"><b>AFAB</b> ↔ <b>SAM</b> Option Code <b>Comparison</b> <b>Dashboard</b></span></div>
+            <div class="title"><span style="font-weight:700;">ASCD</span> <span style="font-size:0.45em; font-weight:300; opacity:0.85; margin-left:10px;"><b>AFAB</b> ↔ <b>SAM</b> Option Code <b>Comparison</b> <b>Dashboard</b></span></div>
             <div class="subtitle">Upload an AFAB CSV/Excel file to automatically compare with SAM data</div>
         </div>
     </div>
