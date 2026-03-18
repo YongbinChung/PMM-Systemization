@@ -2794,7 +2794,7 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
             '_all_wings_codes': ','.join(sorted(wings_codes)),
             '_all_sam_codes': ','.join(sorted(sam_codes)),
             'Compared SAM file name': sam_file,
-            'SAM Status': 'Match' if (sam_codes and not only_s_display and not only_w_display) else ('Mismatch' if sam_codes else 'No SAM'),
+            'SAM Status': 'Match' if sam_codes else 'Mismatch',
         }
         
         # compute days until deadline (Vehicle alterable until)
@@ -2856,7 +2856,6 @@ def _style_deadline(df: pd.DataFrame) -> pd.DataFrame:
     if 'SAM Status' in df.columns:
         styles.loc[df['SAM Status'] == 'Match', 'SAM Status'] = 'background-color: #d4edda; color: #155724; font-weight: bold; border-radius: 4px; text-align: center'
         styles.loc[df['SAM Status'] == 'Mismatch', 'SAM Status'] = 'background-color: #f8d7da; color: #721c24; font-weight: bold; border-radius: 4px; text-align: center'
-        styles.loc[df['SAM Status'] == 'No SAM', 'SAM Status'] = 'background-color: #e2e3e5; color: #383d41; font-weight: bold; border-radius: 4px; text-align: center'
     return styles
 
 
