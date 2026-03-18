@@ -3128,7 +3128,7 @@ def main():
     <div class="header-bar">
         {_logo_html}
         <div>
-            <div class="title">ASD <span style="font-size:0.45em; font-weight:normal; opacity:0.85; margin-left:10px;">AFAB ↔ SAM Option Code Comparison Dashboard</span></div>
+            <div class="title">ASCD <span style="font-size:0.45em; font-weight:normal; opacity:0.85; margin-left:10px;"><b>A</b>FAB ↔ <b>S</b>AM Option Code <b>C</b>omparison <b>D</b>ashboard</span></div>
             <div class="subtitle">Upload an AFAB CSV/Excel file to automatically compare with SAM data</div>
         </div>
     </div>
