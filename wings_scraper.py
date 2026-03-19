@@ -24,7 +24,7 @@ WINGS_URL = "https://wings.tsac.daimlertruck.com/sites/main.jsp"
 # 전용 Chrome 프로필 디렉터리 (사용자의 메인 Chrome과 충돌 방지)
 WINGS_PROFILE_DIR = os.path.join(
     os.environ.get("LOCALAPPDATA", os.path.expanduser("~")),
-    "Google", "Chrome", "User Data", "WingsAutomation",
+    "WingsAutomation",
 )
 
 # 자격 증명 파일 경로
@@ -193,7 +193,7 @@ async def _wings_download_async(months: list, download_dir: str, on_status=None,
             headless=False,
             accept_downloads=True,
             downloads_path=download_dir,
-            args=["--start-maximized"],
+            args=["--start-maximized", "--window-position=100,100", "--window-size=1280,800"],
             viewport=None,
         )
         if chrome_exe:
@@ -205,11 +205,19 @@ async def _wings_download_async(months: list, download_dir: str, on_status=None,
         )
         page = ctx.pages[0] if ctx.pages else await ctx.new_page()
         await page.bring_to_front()
+        try:
+            await page.evaluate("window.moveTo(100, 100); window.resizeTo(1280, 800); window.focus();")
+        except Exception:
+            pass
 
         # ── 1. WINGS 접속 ──────────────────────────────────────────────────────
         status("WINGS에 접속 중...")
         await page.goto(WINGS_URL, wait_until="networkidle", timeout=30000)
         await page.bring_to_front()
+        try:
+            await page.evaluate("window.moveTo(100, 100); window.resizeTo(1280, 800); window.focus();")
+        except Exception:
+            pass
 
         # 로그인이 필요한 경우
         login_needed = False
