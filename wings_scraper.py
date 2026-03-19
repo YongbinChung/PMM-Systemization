@@ -204,10 +204,12 @@ async def _wings_download_async(months: list, download_dir: str, on_status=None,
             **launch_kwargs,
         )
         page = ctx.pages[0] if ctx.pages else await ctx.new_page()
+        await page.bring_to_front()
 
         # ── 1. WINGS 접속 ──────────────────────────────────────────────────────
         status("WINGS에 접속 중...")
         await page.goto(WINGS_URL, wait_until="networkidle", timeout=30000)
+        await page.bring_to_front()
 
         # 로그인이 필요한 경우
         login_needed = False
@@ -335,6 +337,7 @@ async def _wings_download_async(months: list, download_dir: str, on_status=None,
                     status(f"비밀번호 입력 실패: {e}")
 
             # ── 2FA 및 로그인 완료 대기 루프 ──
+            await page.bring_to_front()
             auth_code_used = False
             mfa_method_selected = False
             for _ in range(360):  # 최대 3분 대기
