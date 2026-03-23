@@ -3320,7 +3320,7 @@ def main():
                 st.session_state.pop('_wings_auto_name', None)
                 st.rerun()
 
-    # ── 이전 다운로드 결과 자동 복구 (Streamlit 재시작 시) ────────────────
+    # ── 이전 다운로드 결과 자동 복구 (스케줄러 또는 이전 세션 결과) ────────────
     if not st.session_state.get('_wings_auto_bytes'):
         _prev_result = os.path.join(os.path.dirname(os.path.abspath(__file__)), '_wings_dl', '_result.json')
         if os.path.exists(_prev_result):
@@ -3333,11 +3333,6 @@ def main():
                         st.session_state['_wings_auto_bytes'] = _f.read()
                     st.session_state['_wings_auto_name'] = os.path.basename(_prev['path'])
                     st.session_state['_auto_fetch_done'] = True
-                    # 결과 파일 정리
-                    os.remove(_prev_result)
-                    _prev_status = os.path.join(os.path.dirname(_prev_result), '_status.txt')
-                    if os.path.exists(_prev_status):
-                        os.remove(_prev_status)
                     st.success(f"이전 다운로드 자동 로드: {st.session_state['_wings_auto_name']}")
                     st.rerun()
             except Exception:
