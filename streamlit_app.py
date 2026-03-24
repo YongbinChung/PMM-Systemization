@@ -1945,10 +1945,14 @@ def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_s
         _exc_only_sam = sorted(c for c in except_codes if c in all_sam and c not in all_wings)
         _exc_only_wings = sorted(c for c in except_codes if c in all_wings and c not in all_sam)
 
-        # 모든 불일치/일치 코드를 하나로 합침 (Production Code 포함)
-        _all_only_sam = sorted(set(list(_only_sam_set) + _exc_only_sam))
-        _all_only_wings = sorted(set(list(_only_wings_set) + _exc_only_wings))
-        _all_common = sorted(c for c in (all_sam & all_wings) if c not in _mand_set)
+        # 모든 불일치/일치 코드를 하나로 합침 (Production Code는 아래로)
+        def _sort_prod_last(codes):
+            normal = sorted(c for c in codes if not _is_prod(c))
+            prod = sorted(c for c in codes if _is_prod(c))
+            return normal + prod
+        _all_only_sam = _sort_prod_last(set(list(_only_sam_set) + _exc_only_sam))
+        _all_only_wings = _sort_prod_last(set(list(_only_wings_set) + _exc_only_wings))
+        _all_common = _sort_prod_last(c for c in (all_sam & all_wings) if c not in _mand_set)
 
         _section_css = '''<style>
             .code-section { padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; }
