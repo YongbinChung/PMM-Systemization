@@ -1941,13 +1941,17 @@ def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_s
         def _is_prod(c):
             return c in _exc_set_view or (c and c[0] in _PROD_PREFIXES)
 
+        # except_codes를 SAM only / WINGS only로 분류
+        _exc_only_sam = sorted(c for c in except_codes if c in all_sam and c not in all_wings)
+        _exc_only_wings = sorted(c for c in except_codes if c in all_wings and c not in all_sam)
+
         # 코드 분류: 일반 코드 vs Production Codes, 각각 불일치/일치 분리
         _common_normal = sorted(c for c in (all_sam & all_wings) if not _is_prod(c) and c not in _mand_set)
         _only_sam_normal = sorted(c for c in _only_sam_set if not _is_prod(c))
         _only_wings_normal = sorted(c for c in _only_wings_set if not _is_prod(c))
         _common_prod = sorted(c for c in (all_sam & all_wings) if _is_prod(c) and c not in _mand_set)
-        _only_sam_prod = sorted(c for c in _only_sam_set if _is_prod(c))
-        _only_wings_prod = sorted(c for c in _only_wings_set if _is_prod(c))
+        _only_sam_prod = _exc_only_sam
+        _only_wings_prod = _exc_only_wings
 
         _section_css = '''<style>
             .code-section { padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; }
