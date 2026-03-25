@@ -386,30 +386,8 @@ async def _wings_download_async(months: list, download_dir: str, on_status=None,
                             }"""
                         )
                         if has_email_mfa:
-                            # "Send verification code" / "인증 코드 보내기" 버튼 클릭
-                            status("이메일 인증 코드 요청 중... (버튼 대기)")
-                            await page.wait_for_timeout(2000)
-                            clicked = await page.evaluate(
-                                """() => {
-                                    const btns = document.querySelectorAll('button');
-                                    for (const b of btns) {
-                                        const txt = (b.textContent || '').trim();
-                                        if (txt === 'Send verification code' || txt === 'Send new verification code'
-                                            || txt === '인증 코드 보내기' || txt === '새 인증 코드 보내기') {
-                                            b.removeAttribute('aria-hidden');
-                                            b.style.display = '';
-                                            b.click();
-                                            return txt;
-                                        }
-                                    }
-                                    return null;
-                                }"""
-                            )
-                            status(f"Send 버튼 클릭 결과: {clicked}")
-                            await page.wait_for_timeout(3000)
-                            status("인증 이메일 발송됨. Outlook Web에서 코드 읽는 중 (최대 3분 대기)...")
-
-                            # Outlook Web 새 탭 열기 (502/503 에러 시 재시도)
+                            # ── 1단계: Send 버튼 클릭 전에 먼저 Outlook을 열어서 현재 최신 코드를 기록 ──
+                            status("Outlook을 먼저 열어 현재 최신 MFA 코드 기록 중...")
                             outlook_page = await ctx.new_page()
                             for _ol_retry in range(3):
                                 await outlook_page.goto("https://outlook.office.com/mail/")
@@ -567,9 +545,36 @@ async def _wings_download_async(months: list, download_dir: str, on_status=None,
                             old_first_code = None
                             try:
                                 old_first_code = await outlook_page.evaluate(_get_first_mfa_code_js)
-                                status(f"현재 최신 MFA 코드: {old_first_code} (새 메일 대기 중...)")
+                                status(f"현재 최신 MFA 코드: {old_first_code}")
                             except Exception:
                                 pass
+
+                            # ── 2단계: 이제 WINGS 페이지로 돌아가서 Send verification code 클릭 ──
+                            status("WINGS 페이지에서 인증 코드 요청 중...")
+                            await page.bring_to_front()
+                            await page.wait_for_timeout(1000)
+                            clicked = await page.evaluate(
+                                """() => {
+                                    const btns = document.querySelectorAll('button');
+                                    for (const b of btns) {
+                                        const txt = (b.textContent || '').trim();
+                                        if (txt === 'Send verification code' || txt === 'Send new verification code'
+                                            || txt === '인증 코드 보내기' || txt === '새 인증 코드 보내기') {
+                                            b.removeAttribute('aria-hidden');
+                                            b.style.display = '';
+                                            b.click();
+                                            return txt;
+                                        }
+                                    }
+                                    return null;
+                                }"""
+                            )
+                            status(f"Send 버튼 클릭: {clicked} → Outlook에서 새 메일 대기 중...")
+                            await page.wait_for_timeout(2000)
+
+                            # Outlook 탭으로 전환하여 새 코드 감지
+                            await outlook_page.bring_to_front()
+                            await outlook_page.wait_for_timeout(2000)
 
                             # 새 MFA 이메일 도착 감지 (최대 3분 대기)
                             email_code = None

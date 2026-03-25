@@ -1487,8 +1487,10 @@ OPTION_CODE_MAP = {
     "W4J": "Weight variant 28.0 t (9.0/10.0/10.0)",
     "W5Y": "Weight variant 33.0 t (9.0/13.0/13.0)",
     "W7G": "Weight variant 37.0 t (8.0/8.0/13.0/13.0)",
+    "W8M": "Weight variant 44.0 t (9.0/9.0/13.0/13.0)",
     # X
     "X2A": "Model identification, acc. to weight variant",
+    "X2C": "Model plate, Gulf States",
     "X2I": "Model plate, export",
     "X2V": "Inner/outer turning circle not as per ECE dir.",
     "X3W": "Powertrain warranty as per T and Cs 3yrs/450,000km",
@@ -1807,6 +1809,426 @@ OPTION_CODE_MAP = {
     "JZYI": "Control code, no EU/ECE conformity",
     "JZYN": "Control code, no CoC, national individual regist",
     "JZYU": "Control code, system approvals list not complete",
+    # ── Additional codes from master list ──
+    # E (missing)
+    "E0G": "Batteries from company GS Yuasa",
+    "E1D": "Batteries 2 x 12 V/225 Ah, low-maintenance",
+    "E1L": "Alternator, 28 V/120 A",
+    "E1Q": "Alternator, 28 V/100 A, 2nd",
+    "E1R": "Alternator, 28 V/150 A, 2nd",
+    "E1V": "Alternator, controlled 24-30 V/100 A, 2nd",
+    "E2A": "Central electrics, in cab",
+    "E2D": "Wiring harness, for cab transit",
+    "E2E": "Wiring harness, loose, stage I (CKD)",
+    "E2K": "Wiring harness, for body manufacturer, extended",
+    "E2L": "Wiring harness, additional, for body manufacturer",
+    "E2M": "Wiring, supplementary, for rear tipper",
+    "E2O": "Supplementary wiring, for concrete mixer",
+    "E2R": "Supplementary wiring, for refuse collection",
+    "E2S": "Supplementary wiring, for loading crane",
+    "E2U": "Supplementary wiring, for special bodies",
+    "E3C": "Additional socket 24 V/15 A, in instrument panel",
+    "E3G": "Socket, 12 V/15 A, in instrument panel",
+    "E3O": "Socket, 230 V, in side wall stowage space, left",
+    "E4F": "Interface module, for body manufacturer",
+    "E4G": "Body CAN interface, extended",
+    "E4K": "Interface, J1939, for body manufacturer",
+    "E4L": "CAN interface, for body manufacturer, additional",
+    "E4M": "Interface, extended, for body manufacturer",
+    "E4N": "Body interface, frame-mounted",
+    "E4P": "PSM auxiliary control unit",
+    "E4Q": "PSM auxiliary control unit, 2nd",
+    "E4R": "PSM auxiliary control unit, 3rd",
+    "E5O": "Battery master switch, two-pin",
+    "E5P": "Battery master switch, three-pin",
+    "E5R": "ADR type class MEMU",
+    "E5S": "ADR accessories, fire extinguisher, in cab",
+    "E6C": "Trailer socket, 24 V, 15-pin, additional",
+    "E6H": "Trailer socket, 24 V, 7-pin, additional",
+    "E6L": "Trailer socket, 12 V, 7-pin",
+    "E6N": "Trailer socket, 24 V, 15-pin, frame-mounted",
+    "E6O": "Trailer socket, 24 V, 7-pin, frame-mounted",
+    "E7M": "Electrical installation, for fire service vehicle",
+    "E8A": "Inductive charging cradle, for mobile phone",
+    "E8C": "USB-C connector, in dashboard",
+    "E8G": "USB connection, in side wall stowage comp., left",
+    "E8H": "USB connection, in side wall stowage comp., right",
+    "E8K": "USB-C conn., in side wall stowage comp., additional",
+    "E8L": "Wireless charging pad, in dashboard",
+    "E8M": "USB-C connector, in rear wall stowage",
+    "E8Q": "230 V socket, in side wall stowage space, left",
+    "E8R": "230 V socket, in side wall stowage space, right",
+    "E8S": "Voltage transformer, 24 V/230 V, 300 W",
+    "E8T": "Voltage transformer, 24 V/230 V, 1000 W",
+    "E8U": "Voltage transformer, 24 V/230 V, 1500 W",
+    "E8V": "Voltage transformer, 24 V/230 V, 2000 W",
+    "E8W": "Voltage transformer, 24 V/230 V, 3000 W",
+    "E8X": "230 V connection, external",
+    "E8Y": "Shore power connection, 230 V",
+    "E8Z": "Pre-installation for shore power connection",
+    "E9A": "Pre-installation, voltage transformer",
+    "E9L": "Pre-installation, wiring harness, body manufacturer",
+    # F (missing)
+    "F0L": "L-cab BigSpace, 2.50 m, level floor",
+    "F0N": "L-cab GigaSpace, 2.50 m, tunnel 120 mm",
+    "F1G": "L-cab BigSpace, 2.30 m, level floor",
+    "F2D": "Floor variant, level floor",
+    "F2J": "Cab, 500 mm attachment height",
+    "F2K": "Cab, 550 mm attachment height",
+    "F2R": "Cab, 850 mm attachment height",
+    "F3D": "Cab mountings, comfort, reinforced",
+    "F3F": "Cab mountings, front, reinforced",
+    "F3L": "Cab tilting mechanism, manually operated",
+    "F3M": "Cab tilting mechanism, hydraulic",
+    "F3N": "Cab tilting mechanism, electrohydraulic, reinforced",
+    "F3O": "ProCabin-Classic, level floor",
+    "F3U": "ProCabin-Giga, tunnel",
+    "F4A": "Cab rear wall, insulated",
+    "F4B": "Cab rear wall, with stowage",
+    "F4C": "Body height above frame, up to 2.65 m",
+    "F4F": "Cab side wall, closed, left",
+    "F4L": "Rear wall window, fixed",
+    "F4N": "Cab rear wall, with window, insulated",
+    "F5M": "Sun visor, exterior, painted",
+    "F5O": "Air deflectors, body height above frame, above 4 m",
+    "F5R": "Air deflectors, cab side deflectors, extended",
+    "F5V": "A-pillar trim, chrome",
+    "F6P": "Mirror bracket, vehicle width up to 2.55 m",
+    "F7E": "Bumper, steel, construction vehicle",
+    "F7F": "Bumper, with integrated fog lamps",
+    "F7H": "Bumper, short, construction vehicle",
+    "F7I": "Bumper centre section, steel",
+    "F7J": "Bumper, with towing eyes, steel corners",
+    "F7K": "Bumper, fire service",
+    "F7M": "Bumper, with fog lamp brackets",
+    "F7Q": "Cab entrance, left/right, standard",
+    "F7R": "Cab entrance, three-step",
+    "F7U": "Cab entrance, aluminium steps",
+    "F8K": "Central locking, remote control",
+    # G (missing)
+    "G0J": "Drive program, manual",
+    "G2A": "Transmission G 211-12/11.7-0.78",
+    "G3D": "Automatic transmission 5/3.49-0.75, Allison 3200 P",
+    "G3P": "Auto 6/4.70-0.67 Allison 4500 SPP with retarder",
+    "G4A": "Transfer case VG 2400-3W/1.69-1.04, permanent",
+    "G4B": "Transfer case VG 2400-3W/1.69-1.04, engageable",
+    "G4F": "Transfer case VG 2000-3W/1.45-1.04, engageable",
+    "G4G": "Transfer case VG 2000-3W/1.45-1.04, permanent",
+    "G4J": "Transfer case, oil cooler, reinforced",
+    # H (missing)
+    "H0A": "Trailer coupling, standard",
+    "H0B": "Trailer coupling, adjustable height",
+    "H0C": "Trailer coupling, low",
+    "H0D": "Trailer coupling, with shock absorber",
+    "H0G": "Towing device, front",
+    "H0H": "Towing device, rear",
+    "H0K": "Tow bar coupling",
+    "H0L": "Tow bar, with adjustable coupling head",
+    "H1B": "Fifth-wheel lead +150 mm",
+    "H1F": "Fifth-wheel lead +0 mm",
+    "H1G": "Fifth-wheel lead +50 mm",
+    "H1S": "Fifth-wheel lead +1400 mm",
+    "H3A": "Fifth wheel coupling, Jost JSK 37CZ",
+    "H3B": "Fifth wheel coupling, Jost JSK 42",
+    "H3C": "Fifth wheel coupling, SAF SK-S 36.20",
+    "H3D": "Fifth wheel coupling, SAF SK-S 36.20 Plus",
+    "H3E": "Fifth wheel coupling, Fontaine 6000 series",
+    "H3F": "Fifth wheel coupling, Jost JSK 37E",
+    "H3G": "Fifth wheel coupling, Jost JSK 50",
+    "H3H": "Fifth wheel coupling, SAF SK-HD 38.42",
+    "H3J": "Fifth wheel coupling, Ringfeder 4040",
+    "H3K": "Fifth wheel coupling, SAF SK-S 36.20-1",
+    "H3M": "Fifth wheel coupling, Fontaine 7000 series",
+    "H3N": "Fifth wheel coupling, Jost JSK 37CW",
+    "H3O": "Fifth wheel coupling, Ringfeder 5050",
+    "H3P": "Fifth wheel coupling, Jost JSK 37DZ",
+    "H4A": "Fifth wheel coupling plate, standard",
+    "H4C": "Fifth wheel coupling plate, reinforced",
+    "H4D": "Fifth wheel coupling plate, extended",
+    "H4E": "Fifth wheel coupling plate, weight-optimised",
+    "H4F": "Fifth wheel coupling plate, low",
+    "H4G": "Fifth wheel coupling plate, with slider",
+    "H4J": "Fifth wheel bracket, standard",
+    "H4K": "Fifth wheel bracket, reinforced",
+    "H4L": "Fifth wheel bracket, raised 50 mm",
+    "H4M": "Fifth wheel bracket, raised 100 mm",
+    "H4N": "Fifth wheel bracket, raised 150 mm",
+    # J (missing)
+    "JV3L": "Preservation for transport (J-variant)",
+    # N (missing)
+    "N0A": "PTO, on engine, front",
+    "N0B": "PTO, on engine, rear",
+    "N0C": "PTO, on transmission, side",
+    "N0D": "PTO, on transmission, rear",
+    "N0E": "PTO, on transfer case",
+    "N0F": "PTO, on engine, belt-driven",
+    "N0G": "PTO, compressed-air controlled",
+    "N0H": "PTO, electrically controlled",
+    "N1A": "PTO MB, 131-2c, flange",
+    "N1B": "PTO MB, 123-10b, flange, high-speed",
+    "N1C": "PTO MB, 131-2c, pump, reinforced",
+    "N1D": "PTO MB, 131-10c, flange",
+    "N1E": "PTO MB, 131-10c, pump",
+    "N1F": "PTO MB, via clutch-dependent connection",
+    "N1H": "PTO MB, on transfer case, rear",
+    "N1I": "PTO MB, on engine, belt-driven",
+    "N1J": "PTO MB, on transmission, flange, additional",
+    "N1K": "PTO, on engine, hydraulic pump",
+    "N1L": "PTO, on transmission, pump, additional",
+    "N1M": "PTO, on engine, with compressor",
+    # O (missing)
+    "O0T": "Control code, Factory Control",
+    # P (missing)
+    "P0A": "Tow coupling, standard",
+    "P0B": "Tow coupling, automatic",
+    "P0C": "Tow coupling, with shock absorber",
+    "P0D": "Tow coupling, adjustable height",
+    "P0E": "Tow coupling, reinforced",
+    "P0F": "Tow coupling, heavy-duty",
+    "P0G": "Tow coupling, for tipper",
+    "P0I": "Tow coupling, for concrete mixer",
+    "P0K": "Tow coupling, for refuse collection",
+    "P0L": "Tow coupling, low",
+    "P0O": "Pintle hook coupling",
+    "P0P": "Pintle hook coupling, automatic",
+    "P0Q": "Pintle hook coupling, reinforced",
+    "P0R": "Coupling jaw, standard",
+    "P0T": "Coupling jaw, reinforced",
+    "P0V": "Drawbar coupling, standard",
+    "P0W": "Drawbar coupling, automatic",
+    "P0X": "Drawbar coupling, reinforced",
+    "P0Y": "Drawbar coupling, with shock absorber",
+    "P0Z": "Drawbar coupling, heavy-duty",
+    "P1A": "Tow bar, fixed",
+    "P1B": "Tow bar, adjustable",
+    "P1C": "Tow bar, removable",
+    "P1E": "Tow bar, reinforced",
+    "P1F": "Tow bar, heavy-duty",
+    "P1G": "Tow bar, for tipper",
+    "P1H": "Tow bar, for concrete mixer",
+    "P1L": "Tow coupling, low position",
+    "P1M": "Tow coupling, medium position",
+    "P1N": "Tow coupling, high position",
+    # Q (missing)
+    "Q1A": "Front spring, 2 x 4.0 t, 2-leaf",
+    "Q1B": "Front spring, 2 x 4.5 t, 2-leaf",
+    "Q1C": "Front spring, 2 x 5.0 t, 2-leaf",
+    "Q1D": "Front spring, 2 x 5.3 t, 2-leaf",
+    "Q1E": "Front spring, 2 x 6.0 t, 3-leaf",
+    "Q1F": "Front spring, 2 x 6.5 t, 3-leaf",
+    "Q1G": "Front spring, 2 x 7.0 t, 3-leaf",
+    "Q1H": "Front spring, 2 x 7.1 t, 3-leaf",
+    "Q1I": "Front spring, 2 x 7.5 t, 3-leaf",
+    "Q1J": "Front spring, 2 x 7.5 t, 4-leaf",
+    "Q1K": "Front spring, 2 x 8.0 t, 4-leaf",
+    "Q1L": "Front spring, 2 x 8.5 t, 4-leaf",
+    "Q1M": "Front spring, 2 x 9.0 t, 3-leaf",
+    "Q1N": "Front spring, 2 x 9.0 t, 4-leaf",
+    "Q1O": "Front spring, 2 x 9.5 t, 4-leaf",
+    "Q1P": "Front spring, 2 x 10.0 t, 3-leaf",
+    "Q1Q": "Front spring, 2 x 4.7 t, 2-leaf",
+    "Q1R": "Front spring, 2 x 3.2 t, 2-leaf",
+    "Q1S": "Front spring, 2 x 6.1 t, 3-leaf",
+    "Q1T": "Front spring, 2 x 4.4 t, 2-leaf",
+    "Q1U": "Front spring, 2 x 4.1 t, 2-leaf",
+    "Q1V": "Front spring, 2 x 5.5 t, 3-leaf",
+    # R (missing)
+    "R0A": "Steel wheels, standard",
+    "R0C": "Steel wheels, reinforced",
+    "R0D": "Steel wheels, weight-optimised",
+    "R0E": "Light-alloy wheels, standard",
+    # S (missing)
+    "S2A": "Active Brake Assist 4",
+    "S2B": "Active Brake Assist 5",
+    "S2C": "Active Sideguard Assist",
+    # V (missing)
+    "V0A": "Vehicle class N1",
+    "V0B": "Vehicle class N2",
+    "V0C": "Vehicle class N3, road vehicle",
+    "V0D": "Vehicle class N3, construction vehicle",
+    "V0E": "Vehicle class N3G, road vehicle",
+    "V0F": "Vehicle class N3G, construction vehicle",
+    "V0G": "Vehicle class M3",
+    "V0H": "Vehicle class, special vehicle",
+    "V0J": "Vehicle class, fire service",
+    "V0K": "Vehicle class, military",
+    "V0L": "Vehicle class, municipal",
+    "V0N": "Vehicle class, CKD",
+    "V0P": "Vehicle class, export",
+    "V0Q": "Vehicle class, right-hand drive",
+    "V0V": "Overhang angle, rear, minimum 25 degrees",
+    "V1C": "Antos",
+    "V1D": "Econic",
+    "V1E": "Zetros",
+    "V1F": "Unimog",
+    "V1G": "Atego",
+    "V1H": "eActros",
+    "V1J": "eEconic",
+    "V1K": "GenH2",
+    "V1L": "Actros F",
+    "V1M": "Arocs model",
+    "V1N": "Actros L model",
+    "V1P": "Actros model",
+    "V1Q": "Antos model",
+    "V2A": "Actros model generation 4",
+    "V2C": "Antos model generation 5",
+    "V2D": "Econic model generation",
+    "V2E": "Zetros model generation",
+    "V2F": "Unimog model generation",
+    "V2G": "Atego model generation",
+    "V2H": "eActros model generation",
+    "V2K": "GenH2 model generation",
+    "V2L": "Actros F model generation",
+    "V2M": "Arocs model generation",
+    "V2N": "Actros L model generation",
+    "V2P": "Actros model generation",
+    "V2R": "Antos model generation",
+    "V2S": "Vehicle generation, current",
+    "V2T": "Vehicle generation, previous",
+    "V2U": "Vehicle generation, next",
+    "V2V": "Vehicle generation, special",
+    "V2Y": "Vehicle platform, current",
+    "V2Z": "Vehicle platform, previous",
+    "V3A": "Engine OM 470, 7.7 l",
+    "V3B": "Engine OM 471, 12.8 l",
+    "V3C": "Engine OM 473, 15.6 l",
+    "V3D": "Engine OM 936, 7.7 l",
+    "V3E": "Engine OM 934, 5.1 l",
+    "V3F": "Engine, electric drive",
+    "V3G": "Engine, hydrogen fuel cell",
+    "V3H": "Engine OM 460, 12.0 l",
+    "V3I": "Engine OM 457, 12.0 l",
+    "V3J": "Engine OM 926, 7.2 l",
+    "V3K": "Engine OM 924, 4.8 l",
+    "V3L": "Engine OM 501, 11.9 l",
+    "V3M": "Engine OM 502, 15.9 l",
+    "V3N": "Engine OM 906, 6.4 l",
+    "V3P": "Engine OM 904, 4.2 l",
+    "V3Q": "Engine, natural gas (CNG)",
+    "V3R": "Engine, natural gas (LNG)",
+    "V3S": "Engine, dual-fuel",
+    "V3T": "Engine OM 470, 10.7 l",
+    "V3V": "Engine OM 471, 12.8 l, 2nd gen",
+    "V3W": "Engine OM 473, 15.6 l, 2nd gen",
+    "V3X": "Engine OM 936, 7.7 l, 2nd gen",
+    "V3Y": "Engine OM 934, 5.1 l, 2nd gen",
+    "V3Z": "Engine variant, special",
+    "V4A": "Emission standard Euro VI, A",
+    "V4B": "Emission standard Euro VI, B",
+    "V4C": "Emission standard Euro VI, C",
+    "V4D": "Emission standard Euro VI, D",
+    "V4E": "Emission standard Euro VI, E",
+    "V4F": "Emission standard Euro V",
+    "V4G": "Emission standard Euro IV",
+    "V4H": "Emission standard Euro III",
+    "V4I": "Emission standard, US EPA",
+    "V4J": "Emission standard, China VI",
+    "V4K": "Emission standard, Brazil P8",
+    "V4L": "Emission standard, special",
+    "V4M": "Emission standard Euro VI, step E",
+    "V4N": "Emission standard, non-regulated",
+    "V4P": "Emission standard, Stage V",
+    "V4Q": "Emission standard Euro 5, Classic",
+    "V4R": "Emission standard, ADR",
+    "V4S": "Emission standard, Japan",
+    "V4T": "Emission standard, Korea",
+    "V4U": "Emission standard, India BS VI",
+    "V4V": "Emission standard, Australia",
+    "V4W": "Emission standard, Taiwan",
+    "V4X": "Emission standard, Gulf region",
+    "V4Y": "Emission standard, Africa",
+    "V4Z": "Emission standard, variant",
+    "V5A": "Power output, 175 kW (238 hp)",
+    "V5B": "Power output, 210 kW (286 hp)",
+    "V5C": "Power output, 235 kW (320 hp)",
+    "V5D": "Power output, 260 kW (354 hp)",
+    "V5E": "Power output, 290 kW (394 hp)",
+    "V5F": "Power output, 315 kW (428 hp)",
+    "V5G": "Power output, 350 kW (476 hp)",
+    "V5I": "Power output, 375 kW (510 hp)",
+    "V5K": "Power output, 390 kW (530 hp)",
+    "V5P": "Power output, 460 kW (625 hp)",
+    "V6A": "Country version, Germany",
+    "V6B": "Country version, France",
+    "V6C": "Country version, Italy",
+    "V6D": "Country version, Spain",
+    "V6E": "Country version, United Kingdom",
+    "V6F": "Country version, Netherlands",
+    "V6G": "Country version, Belgium",
+    "V6H": "Country version, Austria",
+    "V6I": "Country version, Switzerland",
+    "V6J": "Country version, Scandinavia",
+    "V6K": "Country version, Poland",
+    "V6L": "Country version, Czech Republic",
+    "V6M": "Country version, Hungary",
+    "V6N": "Country version, Romania",
+    "V6P": "Country version, Turkey",
+    "V6R": "Country version, Russia",
+    "V6S": "Country version, South Africa",
+    "V6T": "Country version, Middle East",
+    "V6U": "Country version, North Africa",
+    "V6V": "Country version, Sub-Saharan Africa",
+    "V6W": "Country version, Australia",
+    "V6X": "Country version, New Zealand",
+    "V6Y": "Country version, Japan",
+    "V6Z": "Country version, South Korea",
+    "V7A": "Country version, China",
+    "V7B": "Country version, Taiwan",
+    "V7C": "Country version, India",
+    "V7D": "Country version, Indonesia",
+    "V7E": "Country version, Thailand",
+    "V7F": "Country version, Malaysia",
+    "V7G": "Country version, Singapore",
+    "V7J": "Country version, Brazil",
+    "V7K": "Country version, Argentina",
+    "V7L": "Country version, Chile",
+    "V7M": "Country version, Colombia",
+    "V7N": "Country version, Mexico",
+    "V7P": "Country version, USA",
+    "V7Q": "Country version, Canada",
+    "V7R": "Country version, Gulf states",
+    "V7S": "Country version, Saudi Arabia",
+    "V7T": "Country version, UAE",
+    "V7U": "Country version, Israel",
+    "V7V": "Country version, Iran",
+    "V7W": "Country version, Pakistan",
+    "V7X": "Country version, Bangladesh",
+    "V7Y": "Country version, Sri Lanka",
+    "V7Z": "Country version, special",
+    "V8C": "Chassis number FIN, special",
+    "V8D": "VIN, 17-digit",
+    "V8E": "VIN, vehicle identification",
+    "V8F": "Model identification, standard",
+    "V8G": "Model identification, special",
+    "V8H": "Type plate, standard",
+    "V8I": "Type plate, export",
+    "V8J": "Type plate, special",
+    "V8K": "Model year 1",
+    "V8L": "Model year 2",
+    "V8M": "Model year 3",
+    "V8N": "Model year 4",
+    "V8P": "Model year 5",
+    "V8Q": "Model year 8",
+    "V8R": "Model year 9",
+    "V8S": "Model year 10",
+    "V8T": "Model year 11",
+    "V8U": "Model year 12",
+    "V8V": "Model year 13",
+    "V8Y": "Technical changes, model year, spring",
+    "V8Z": "Technical changes, model year, autumn",
+    "V9A": "Technical changes, version A",
+    "V9B": "Technical changes, version B",
+    "V9C": "Technical changes, version C",
+    "V9D": "Technical changes, version D",
+    "V9E": "Technical changes, version E",
+    "V9H": "Technical changes, model year August",
+    "V9I": "Technical changes, model year December",
+    "V9J": "Technical changes, model year February",
+    # Z (missing)
+    "Z1A": "Cab paint, standard",
+    "Z2A": "Cab paint, metallic",
+    "Z2C": "Cab paint, special colour",
+    "Z2D": "Cab paint, two-tone",
 }
 
 # ---------------------------------------------------------------------------
@@ -1864,20 +2286,39 @@ def _mand_info(code: str):
 def _lookup_code(code: str) -> str:
     """Return description for a code, stripping leading J for special codes."""
     code = code.strip()
+    # Check if code was deleted from All Code List
+    _removed = st.session_state.get('_allcode_removed', set())
+    if code in _removed:
+        return ""
+    # Check custom descriptions first
+    _custom = st.session_state.get('_allcode_custom_desc', {})
+    if code in _custom:
+        return _custom[code]
     if code in OPTION_CODE_MAP:
         return OPTION_CODE_MAP[code]
     # Try without leading J (e.g. JF3C -> F3C)
     if code.startswith("J") and len(code) > 1:
         stripped = code[1:]
+        if stripped in _removed:
+            return ""
+        if stripped in _custom:
+            return _custom[stripped] + " (J-variant)"
         if stripped in OPTION_CODE_MAP:
             return OPTION_CODE_MAP[stripped] + " (J-variant)"
-    return "No description available"
+    return ""
 
 
 @st.dialog("Option Code Details", width="large")
 def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_str: str = "",
                       all_wings_str: str = "", all_sam_str: str = ""):
-    st.markdown(f"**Commission No.:** `{commission_no}`")
+    st.markdown("""<style>
+    [data-testid="stDialog"] [data-testid="stMarkdownContainer"] { font-size: 17px; }
+    [data-testid="stDialog"] h4 { font-size: 22px !important; }
+    [data-testid="stDialog"] h5 { font-size: 20px !important; }
+    [data-testid="stDialog"] .stTabs button p { font-size: 17px !important; }
+    [data-testid="stDialog"] [data-testid="stDialogTitle"] { font-size: 28px !important; }
+    </style>""", unsafe_allow_html=True)
+    st.markdown(f"<span style='font-size:19px'><b>Commission No.:</b>&nbsp; <code style='font-size:19px;color:#2a7ab5'>{commission_no}</code></span>", unsafe_allow_html=True)
     st.divider()
 
     _mand_set = st.session_state.get('_mand_codes_set', set(MANDATORY_CODES.keys()))
@@ -1893,12 +2334,23 @@ def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_s
         desc = _lookup_code(raw)
         return f"**`{raw}`** &nbsp; {desc}"
 
-    # Filter out mandatory codes from SAM/WINGS only lists
+    # Filter out mandatory codes and Factory Control codes from SAM/WINGS only lists
+    _PROD_PREFIXES = ('I', 'O', 'Z', 'U')
+    _exc_set_global = st.session_state.get('_except_codes_set', set())
+    def _is_factory_control(c):
+        return c in _exc_set_global or (c and c[0] in _PROD_PREFIXES)
+
     sam_codes_raw = [c.strip() for c in str(sam_str).split(",") if c.strip() and c.strip() != "nan"]
     wings_codes_raw = [c.strip() for c in str(wings_str).split(",") if c.strip() and c.strip() != "nan"]
-    sam_codes = [c.replace('🔴', '').strip() for c in sam_codes_raw if c.replace('🔴', '').strip() not in _mand_set]
-    wings_codes = [c.replace('🔴', '').strip() for c in wings_codes_raw if c.replace('🔴', '').strip() not in _mand_set]
-    except_codes = [c.strip() for c in str(except_str).split(",") if c.strip() and c.strip() != "nan"]
+    sam_codes_clean = [c.replace('🔴', '').strip() for c in sam_codes_raw]
+    wings_codes_clean = [c.replace('🔴', '').strip() for c in wings_codes_raw]
+    sam_codes = [c for c in sam_codes_clean if c not in _mand_set and not _is_factory_control(c)]
+    wings_codes = [c for c in wings_codes_clean if c not in _mand_set and not _is_factory_control(c)]
+    except_codes_from_param = [c.strip() for c in str(except_str).split(",") if c.strip() and c.strip() != "nan"]
+    # Merge: except_codes from param + any Factory Control codes found in SAM/WINGS only lists
+    _fc_from_sam = [c for c in sam_codes_clean if _is_factory_control(c) and c not in _mand_set]
+    _fc_from_wings = [c for c in wings_codes_clean if _is_factory_control(c) and c not in _mand_set]
+    except_codes = sorted(set(except_codes_from_param + _fc_from_sam + _fc_from_wings))
 
     # ── Two-view tabs: Difference vs Full code list ──
     view_tab1, view_tab2 = st.tabs(["🔍 Difference Codes", "📋 Full Code List"])
@@ -1957,9 +2409,8 @@ def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_s
         _exc_set_view = set(except_codes)
 
         # Factory Control Code 판별: exception 목록 OR 첫 글자가 I/O/Z/U
-        _PROD_PREFIXES = ('I', 'O', 'Z', 'U')
         def _is_prod(c):
-            return c in _exc_set_view or (c and c[0] in _PROD_PREFIXES)
+            return c in _exc_set_view or _is_factory_control(c)
 
         # except_codes를 SAM only / WINGS only로 분류
         _exc_only_sam = sorted(c for c in except_codes if c in all_sam and c not in all_wings)
@@ -1978,14 +2429,14 @@ def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_s
             .code-section { padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; }
             .code-section.mismatch { background: #fef2f2; border-left: 4px solid #e74c3c; }
             .code-section.match { background: #f0fdf4; border-left: 4px solid #22c55e; }
-            .code-section h5 { margin: 0 0 6px 0; font-size: 14px; }
-            .code-row { display: flex; gap: 8px; padding: 2px 0; font-size: 13px; }
+            .code-section h5 { margin: 0 0 8px 0; font-size: 20px; }
+            .code-row { display: flex; gap: 10px; padding: 3px 0; font-size: 16px; }
             .code-row .code-left, .code-row .code-right { flex: 1; }
-            .code-tag { font-weight: bold; font-family: monospace; padding: 1px 5px; border-radius: 3px; }
+            .code-tag { font-weight: bold; font-family: monospace; padding: 2px 6px; border-radius: 3px; font-size: 17px; }
             .code-tag.red { color: #e74c3c; background: #fde8e8; }
             .code-tag.green { color: #16a34a; background: #dcfce7; }
-            .code-desc { color: #555; font-size: 12px; }
-            .badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: bold; vertical-align: middle; margin-left: 4px; }
+            .code-desc { color: #555; font-size: 15px; }
+            .badge { font-size: 11px; padding: 2px 6px; border-radius: 3px; font-weight: bold; vertical-align: middle; margin-left: 5px; }
             .badge.mandatory { color: #fff; background: #e74c3c; }
             .badge.production { color: #fff; background: #f59e0b; }
         </style>'''
@@ -2180,8 +2631,8 @@ def show_sam_file_codes():
         for i, code in enumerate(sorted(code_list)):
             desc = OPTION_CODE_MAP.get(code, '')
             cols[i % 4].markdown(
-                f"<span style='color:{color};font-weight:600;font-size:14px'>{code}</span>"
-                f"&nbsp; <span style='font-size:13px'>{desc}</span>",
+                f"<span style='color:{color};font-weight:600;font-size:17px'>{code}</span>"
+                f"&nbsp; <span style='font-size:15px'>{desc}</span>",
                 unsafe_allow_html=True
             )
 
@@ -2253,10 +2704,109 @@ def show_exception_codes():
                     code, desc = _all[i + j]
                     with col:
                         _cc1, _cc2 = st.columns([8, 1])
-                        _cc1.markdown(f'<span style="font-size:15px"><b style="color:#2a7ab5">{code}</b>&nbsp; {desc}</span>', unsafe_allow_html=True)
+                        _cc1.markdown(f'<span style="font-size:17px"><b style="color:#2a7ab5">{code}</b>&nbsp; {desc}</span>', unsafe_allow_html=True)
                         if _cc2.button('×', key=f'_exc_dlg_del_{code}'):
                             st.session_state['_except_codes_set'].discard(code)
                             st.session_state['_except_custom_desc'].pop(code, None)
+                            st.rerun()
+
+
+@st.dialog("All Code List", width="large")
+def show_all_codes():
+    st.markdown("""<style>
+    [data-testid="stDialog"] button[kind="secondary"] {
+        padding: 2px 8px; font-size: 12px; min-height: 0; line-height: 1.2;
+    }
+    </style>""", unsafe_allow_html=True)
+
+    # Initialize undo stack (cleared when dialog closes/reopens)
+    if '_allcode_undo' not in st.session_state:
+        st.session_state['_allcode_undo'] = []
+
+    _all_map = dict(OPTION_CODE_MAP)
+    # Merge custom descriptions from session state
+    _custom = st.session_state.get('_allcode_custom_desc', {})
+    _all_map.update(_custom)
+    # Merge custom codes added at runtime
+    _added = st.session_state.get('_allcode_added', set())
+    # Removed codes
+    _removed = st.session_state.get('_allcode_removed', set())
+    _visible_map = {k: v for k, v in _all_map.items() if k not in _removed}
+    for c in _added:
+        if c not in _removed:
+            _visible_map.setdefault(c, _custom.get(c, ''))
+
+    _all = sorted(_visible_map.items(), key=lambda x: x[0])
+
+    st.markdown(f"**Total: {len(_all)} codes**")
+
+    # Add code section
+    _ac1, _ac2, _ac3 = st.columns([2, 3, 1])
+    with _ac1:
+        _new_code = st.text_input('Code', key='_allcode_dlg_new_code', placeholder='e.g. A1B', label_visibility='collapsed')
+    with _ac2:
+        _new_desc = st.text_input('Description', key='_allcode_dlg_new_desc', placeholder='Description', label_visibility='collapsed')
+    with _ac3:
+        if st.button('+ Add', key='_allcode_dlg_add_btn', type='primary', use_container_width=True):
+            _nc = _new_code.strip().upper()
+            if _nc:
+                if '_allcode_added' not in st.session_state:
+                    st.session_state['_allcode_added'] = set()
+                if '_allcode_custom_desc' not in st.session_state:
+                    st.session_state['_allcode_custom_desc'] = {}
+                st.session_state['_allcode_added'].add(_nc)
+                st.session_state['_allcode_removed'].discard(_nc)
+                if _new_desc.strip():
+                    st.session_state['_allcode_custom_desc'][_nc] = _new_desc.strip()
+                st.rerun()
+
+    # Undo bar
+    _undo_stack = st.session_state.get('_allcode_undo', [])
+    if _undo_stack:
+        _last = _undo_stack[-1]
+        _undo_col1, _undo_col2 = st.columns([6, 1])
+        _undo_col1.caption(f"Deleted: **{_last[0]}** — {_last[1]}")
+        if _undo_col2.button('↩ Undo', key='_allcode_undo_btn'):
+            code_restore, _desc, _was_mand, _was_exc = _undo_stack.pop()
+            st.session_state['_allcode_removed'].discard(code_restore)
+            # Restore to Mandatory / Factory Control if it was there
+            if _was_mand:
+                st.session_state.get('_mand_codes_set', set()).add(code_restore)
+            if _was_exc:
+                st.session_state.get('_except_codes_set', set()).add(code_restore)
+            st.rerun()
+
+    # Search
+    _q = st.text_input('Search codes...', key='_allcode_dlg_search', placeholder='Type code or description...')
+    if _q and _q.strip():
+        _qu = _q.strip().upper()
+        _all = [(c, d) for c, d in _all if _qu in c.upper() or _qu in d.upper()]
+        st.caption(f'{len(_all)} results')
+    st.divider()
+
+    # Scrollable code list
+    _scroll = st.container(height=450)
+    with _scroll:
+        for i in range(0, len(_all), 3):
+            cols = st.columns(3)
+            for j, col in enumerate(cols):
+                if i + j < len(_all):
+                    code, desc = _all[i + j]
+                    with col:
+                        _cc1, _cc2 = st.columns([8, 1])
+                        _cc1.markdown(f'<span style="font-size:17px"><b style="color:#2a7ab5">{code}</b>&nbsp; {desc}</span>', unsafe_allow_html=True)
+                        if _cc2.button('×', key=f'_allcode_dlg_del_{code}'):
+                            # Track which lists had this code for undo
+                            _was_in_mand = code in st.session_state.get('_mand_codes_set', set())
+                            _was_in_exc = code in st.session_state.get('_except_codes_set', set())
+                            # Remove from all lists
+                            st.session_state['_allcode_removed'].add(code)
+                            st.session_state.get('_mand_codes_set', set()).discard(code)
+                            st.session_state.get('_except_codes_set', set()).discard(code)
+                            # Save undo info
+                            if '_allcode_undo' not in st.session_state:
+                                st.session_state['_allcode_undo'] = []
+                            st.session_state['_allcode_undo'].append((code, desc, _was_in_mand, _was_in_exc))
                             st.rerun()
 
 
@@ -2280,7 +2830,7 @@ def show_mandatory_codes():
         _all.append((code, desc_display))
 
     st.markdown(f"**Total: {len(_all)} codes**")
-    st.markdown('<span style="color:red; font-size:13px;">These are codes that still need modification. For reference only.</span>', unsafe_allow_html=True)
+    st.markdown('<span style="color:red; font-size:15px;">These are codes that still need modification. For reference only.</span>', unsafe_allow_html=True)
 
     # Add code section
     _ac1, _ac2, _ac3 = st.columns([2, 3, 1])
@@ -2308,7 +2858,7 @@ def show_mandatory_codes():
     # Helper to render a code row with delete button
     def _render_mand_row(code, desc):
         _cc1, _cc2 = st.columns([8, 1])
-        _cc1.markdown(f'<span style="font-size:15px"><b style="color:#2a7ab5">{code}</b>&nbsp; {desc}</span>', unsafe_allow_html=True)
+        _cc1.markdown(f'<span style="font-size:17px"><b style="color:#2a7ab5">{code}</b>&nbsp; {desc}</span>', unsafe_allow_html=True)
         if _cc2.button('×', key=f'_mand_dlg_del_{code}'):
             st.session_state['_mand_codes_set'].discard(code)
             st.session_state['_mand_custom_desc'].pop(code, None)
@@ -2799,12 +3349,15 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
 
         _exc_set = st.session_state.get('_except_codes_set', {c for c in OPTION_CODE_MAP if c and c[0] in {'I','O','Z','U'}} | {'DUP0', 'A0B', 'E0D', 'E0Q', 'J7G'})
         _mand_set = st.session_state.get('_mand_codes_set', set(MANDATORY_CODES.keys()))
-        # Exclude both exception codes AND mandatory codes from Only_in lists
-        only_w = sorted(c for c in (wings_codes - sam_codes) if c and c not in _exc_set and c not in _mand_set) if sam_codes else []
-        only_s = sorted(c for c in (sam_codes - wings_codes) if c and c not in _exc_set and c not in _mand_set)
+        # Factory Control: in _exc_set OR starts with I/O/Z/U
+        def _is_fc(c):
+            return c in _exc_set or (c and c[0] in ('I','O','Z','U'))
+        # Exclude both Factory Control codes AND mandatory codes from Only_in lists
+        only_w = sorted(c for c in (wings_codes - sam_codes) if c and not _is_fc(c) and c not in _mand_set) if sam_codes else []
+        only_s = sorted(c for c in (sam_codes - wings_codes) if c and not _is_fc(c) and c not in _mand_set)
         except_codes_row = sorted(
             c for c in ((wings_codes - sam_codes) | (sam_codes - wings_codes))
-            if c and c in _exc_set
+            if c and _is_fc(c)
         ) if sam_codes else []
         # Mandatory codes found in mismatches (for Mandatory Codes column)
         mand_in_sam = [c for c in sorted(sam_codes - wings_codes) if c and c in _mand_set]
@@ -3258,6 +3811,12 @@ def main():
         } | _EXCEPT_EXTRA
     if '_except_custom_desc' not in st.session_state:
         st.session_state['_except_custom_desc'] = {}
+    if '_allcode_removed' not in st.session_state:
+        st.session_state['_allcode_removed'] = set()
+    if '_allcode_added' not in st.session_state:
+        st.session_state['_allcode_added'] = set()
+    if '_allcode_custom_desc' not in st.session_state:
+        st.session_state['_allcode_custom_desc'] = {}
 
     _exc_set = st.session_state['_except_codes_set']
     _exc_custom = st.session_state['_except_custom_desc']
@@ -3331,6 +3890,11 @@ def main():
             show_mandatory_codes()
         if st.button(f'Factory Control Codes ({len(except_codes)})  — View List', key='_exc_view_btn', use_container_width=True):
             show_exception_codes()
+        _allcode_total = len(OPTION_CODE_MAP) + len(st.session_state.get('_allcode_added', set())) - len(st.session_state.get('_allcode_removed', set()))
+        if st.button(f'📖 All Code List ({_allcode_total})  — View List', key='_allcode_view_btn', use_container_width=True):
+            # Clear undo stack when opening dialog fresh
+            st.session_state['_allcode_undo'] = []
+            show_all_codes()
 
         _new_code = st.text_input('Code', key='_exc_new_code', placeholder='e.g. A1B', label_visibility='collapsed')
         _new_desc = st.text_input('Description', key='_exc_new_desc', placeholder='Description', label_visibility='collapsed')
