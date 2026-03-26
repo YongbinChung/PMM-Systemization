@@ -3,6 +3,8 @@ import pandas as pd
 import io
 import os
 import re
+import json
+import requests as _requests
 from datetime import date, timedelta
 import base64
 from pathlib import Path
@@ -17,6 +19,113 @@ try:
     _WINGS_AUTO = True
 except ImportError:
     _WINGS_AUTO = False
+
+
+# ---------------------------------------------------------------------------
+# Persistent storage via GitHub API
+# ---------------------------------------------------------------------------
+_GITHUB_REPO = 'PMM-YB/Star-Truck-Korea-Database-Systemization'
+_DATA_FILE = 'code_data.json'
+
+
+def _get_github_token():
+    """Get GitHub token from Streamlit secrets."""
+    try:
+        return st.secrets.get('GITHUB_TOKEN', '')
+    except Exception:
+        return ''
+
+
+@st.cache_resource(ttl=60)
+def _load_persistent_data():
+    """Load persistent code data from GitHub repo (cached 60s)."""
+    token = _get_github_token()
+    if not token:
+        return None
+    try:
+        headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
+        resp = _requests.get(
+            f'https://api.github.com/repos/{_GITHUB_REPO}/contents/{_DATA_FILE}',
+            headers=headers, timeout=10
+        )
+        if resp.status_code == 200:
+            import base64 as _b64
+            content = _b64.b64decode(resp.json()['content']).decode('utf-8')
+            return json.loads(content)
+    except Exception:
+        pass
+    return None
+
+
+def _save_persistent_data(data: dict):
+    """Save code data to GitHub repo."""
+    token = _get_github_token()
+    if not token:
+        return False
+    try:
+        headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
+        url = f'https://api.github.com/repos/{_GITHUB_REPO}/contents/{_DATA_FILE}'
+        # Get current file SHA
+        resp = _requests.get(url, headers=headers, timeout=10)
+        sha = resp.json().get('sha', '') if resp.status_code == 200 else ''
+        # Encode content
+        import base64 as _b64
+        content_bytes = json.dumps(data, ensure_ascii=False, indent=2).encode('utf-8')
+        payload = {
+            'message': 'Update code data (auto-save)',
+            'content': _b64.b64encode(content_bytes).decode(),
+        }
+        if sha:
+            payload['sha'] = sha
+        resp = _requests.put(url, headers=headers, json=payload, timeout=15)
+        if resp.status_code in (200, 201):
+            _load_persistent_data.clear()  # Clear cache so next load gets fresh data
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def _collect_current_data() -> dict:
+    """Collect current session state into a persistable dict."""
+    return {
+        'allcode_added': sorted(st.session_state.get('_allcode_added', set())),
+        'allcode_removed': sorted(st.session_state.get('_allcode_removed', set())),
+        'allcode_custom_desc': dict(st.session_state.get('_allcode_custom_desc', {})),
+        'mand_codes': sorted(st.session_state.get('_mand_codes_set', set())),
+        'mand_custom_desc': dict(st.session_state.get('_mand_custom_desc', {})),
+        'except_codes': sorted(st.session_state.get('_except_codes_set', set())),
+        'except_custom_desc': dict(st.session_state.get('_except_custom_desc', {})),
+    }
+
+
+def _apply_persistent_data(data: dict):
+    """Apply loaded persistent data to session state (only on first load)."""
+    if data is None:
+        return
+    if st.session_state.get('_persistent_loaded'):
+        return
+    st.session_state['_persistent_loaded'] = True
+    if 'allcode_added' in data:
+        st.session_state['_allcode_added'] = set(data['allcode_added'])
+    if 'allcode_removed' in data:
+        st.session_state['_allcode_removed'] = set(data['allcode_removed'])
+    if 'allcode_custom_desc' in data:
+        st.session_state['_allcode_custom_desc'] = dict(data['allcode_custom_desc'])
+    if 'mand_codes' in data:
+        st.session_state['_mand_codes_set'] = set(data['mand_codes'])
+    if 'mand_custom_desc' in data:
+        st.session_state['_mand_custom_desc'] = dict(data['mand_custom_desc'])
+    if 'except_codes' in data:
+        st.session_state['_except_codes_set'] = set(data['except_codes'])
+    if 'except_custom_desc' in data:
+        st.session_state['_except_custom_desc'] = dict(data['except_custom_desc'])
+
+
+def _auto_save():
+    """Save current state to GitHub (call after any code change)."""
+    data = _collect_current_data()
+    _save_persistent_data(data)
 
 
 # ---------------------------------------------------------------------------
@@ -2684,6 +2793,7 @@ def show_exception_codes():
                 st.session_state['_except_codes_set'].add(_nc)
                 if _new_desc.strip():
                     st.session_state['_except_custom_desc'][_nc] = _new_desc.strip()
+                _auto_save()
                 st.rerun()
 
     # Search
@@ -2694,6 +2804,36 @@ def show_exception_codes():
         st.caption(f'{len(_all)} results')
     st.divider()
 
+    # Edit form at the top if editing
+    _editing_exc = st.session_state.get('_exc_editing', None)
+    if _editing_exc:
+        _edit_desc_orig = _exc_custom.get(_editing_exc, OPTION_CODE_MAP.get(_editing_exc, ''))
+        st.markdown(f'**✏️ Editing: {_editing_exc}**')
+        _ec1, _ec2, _ec3, _ec4 = st.columns([2, 4, 1, 1])
+        with _ec1:
+            _edit_new_code = st.text_input('Code', value=_editing_exc, key='_exc_edit_code')
+        with _ec2:
+            _edit_new_desc = st.text_input('Description', value=_edit_desc_orig, key='_exc_edit_desc')
+        with _ec3:
+            if st.button('✓ Save', key='_exc_edit_save', type='primary', use_container_width=True):
+                _nc = _edit_new_code.strip().upper()
+                _nd = _edit_new_desc.strip()
+                if _nc:
+                    if _nc != _editing_exc:
+                        st.session_state['_except_codes_set'].discard(_editing_exc)
+                        st.session_state['_except_custom_desc'].pop(_editing_exc, None)
+                        st.session_state['_except_codes_set'].add(_nc)
+                    if _nd:
+                        st.session_state['_except_custom_desc'][_nc] = _nd
+                _auto_save()
+                st.session_state['_exc_editing'] = None
+                st.rerun()
+        with _ec4:
+            if st.button('Cancel', key='_exc_edit_cancel', use_container_width=True):
+                st.session_state['_exc_editing'] = None
+                st.rerun()
+        st.divider()
+
     # Scrollable code list
     _scroll = st.container(height=450)
     with _scroll:
@@ -2703,11 +2843,15 @@ def show_exception_codes():
                 if i + j < len(_all):
                     code, desc = _all[i + j]
                     with col:
-                        _cc1, _cc2 = st.columns([8, 1])
+                        _cc1, _cc2, _cc3 = st.columns([8, 1, 1])
                         _cc1.markdown(f'<span style="font-size:17px"><b style="color:#2a7ab5">{code}</b>&nbsp; {desc}</span>', unsafe_allow_html=True)
-                        if _cc2.button('×', key=f'_exc_dlg_del_{code}'):
+                        if _cc2.button('✎', key=f'_exc_dlg_edit_{code}'):
+                            st.session_state['_exc_editing'] = code
+                            st.rerun()
+                        if _cc3.button('×', key=f'_exc_dlg_del_{code}'):
                             st.session_state['_except_codes_set'].discard(code)
                             st.session_state['_except_custom_desc'].pop(code, None)
+                            _auto_save()
                             st.rerun()
 
 
@@ -2758,6 +2902,7 @@ def show_all_codes():
                 st.session_state['_allcode_removed'].discard(_nc)
                 if _new_desc.strip():
                     st.session_state['_allcode_custom_desc'][_nc] = _new_desc.strip()
+                _auto_save()
                 st.rerun()
 
     # Undo bar
@@ -2774,6 +2919,7 @@ def show_all_codes():
                 st.session_state.get('_mand_codes_set', set()).add(code_restore)
             if _was_exc:
                 st.session_state.get('_except_codes_set', set()).add(code_restore)
+            _auto_save()
             st.rerun()
 
     # Search
@@ -2785,17 +2931,67 @@ def show_all_codes():
     st.divider()
 
     # Scrollable code list
+    _editing = st.session_state.get('_allcode_editing', None)  # code currently being edited
     _scroll = st.container(height=450)
     with _scroll:
+        # If editing, show edit form at the top
+        if _editing:
+            _edit_code_orig = _editing
+            _edit_desc_orig = dict(OPTION_CODE_MAP)
+            _edit_desc_orig.update(st.session_state.get('_allcode_custom_desc', {}))
+            _edit_cur_desc = _edit_desc_orig.get(_edit_code_orig, '')
+            st.markdown(f'**✏️ Editing: {_edit_code_orig}**')
+            _ec1, _ec2, _ec3, _ec4 = st.columns([2, 4, 1, 1])
+            with _ec1:
+                _edit_new_code = st.text_input('Code', value=_edit_code_orig, key='_allcode_edit_code')
+            with _ec2:
+                _edit_new_desc = st.text_input('Description', value=_edit_cur_desc, key='_allcode_edit_desc')
+            with _ec3:
+                if st.button('✓ Save', key='_allcode_edit_save', type='primary', use_container_width=True):
+                    _nc = _edit_new_code.strip().upper()
+                    _nd = _edit_new_desc.strip()
+                    if _nc:
+                        _custom_desc = st.session_state.get('_allcode_custom_desc', {})
+                        _added_set = st.session_state.get('_allcode_added', set())
+                        if _nc != _edit_code_orig:
+                            # Code name changed: remove old, add new
+                            st.session_state['_allcode_removed'].add(_edit_code_orig)
+                            _added_set.add(_nc)
+                            st.session_state['_allcode_removed'].discard(_nc)
+                            st.session_state['_allcode_added'] = _added_set
+                            # Move in mandatory/factory control sets
+                            _ms = st.session_state.get('_mand_codes_set', set())
+                            if _edit_code_orig in _ms:
+                                _ms.discard(_edit_code_orig)
+                                _ms.add(_nc)
+                            _es = st.session_state.get('_except_codes_set', set())
+                            if _edit_code_orig in _es:
+                                _es.discard(_edit_code_orig)
+                                _es.add(_nc)
+                        # Update description
+                        _custom_desc[_nc] = _nd
+                        st.session_state['_allcode_custom_desc'] = _custom_desc
+                    _auto_save()
+                    st.session_state['_allcode_editing'] = None
+                    st.rerun()
+            with _ec4:
+                if st.button('Cancel', key='_allcode_edit_cancel', use_container_width=True):
+                    st.session_state['_allcode_editing'] = None
+                    st.rerun()
+            st.divider()
+
         for i in range(0, len(_all), 3):
             cols = st.columns(3)
             for j, col in enumerate(cols):
                 if i + j < len(_all):
                     code, desc = _all[i + j]
                     with col:
-                        _cc1, _cc2 = st.columns([8, 1])
+                        _cc1, _cc2, _cc3 = st.columns([8, 1, 1])
                         _cc1.markdown(f'<span style="font-size:17px"><b style="color:#2a7ab5">{code}</b>&nbsp; {desc}</span>', unsafe_allow_html=True)
-                        if _cc2.button('×', key=f'_allcode_dlg_del_{code}'):
+                        if _cc2.button('✎', key=f'_allcode_dlg_edit_{code}'):
+                            st.session_state['_allcode_editing'] = code
+                            st.rerun()
+                        if _cc3.button('×', key=f'_allcode_dlg_del_{code}'):
                             # Track which lists had this code for undo
                             _was_in_mand = code in st.session_state.get('_mand_codes_set', set())
                             _was_in_exc = code in st.session_state.get('_except_codes_set', set())
@@ -2807,6 +3003,7 @@ def show_all_codes():
                             if '_allcode_undo' not in st.session_state:
                                 st.session_state['_allcode_undo'] = []
                             st.session_state['_allcode_undo'].append((code, desc, _was_in_mand, _was_in_exc))
+                            _auto_save()
                             st.rerun()
 
 
@@ -2845,6 +3042,7 @@ def show_mandatory_codes():
                 st.session_state['_mand_codes_set'].add(_nc)
                 if _new_desc.strip():
                     st.session_state['_mand_custom_desc'][_nc] = _new_desc.strip()
+                _auto_save()
                 st.rerun()
 
     # Search
@@ -2855,13 +3053,50 @@ def show_mandatory_codes():
         st.caption(f'{len(_all)} results')
     st.divider()
 
-    # Helper to render a code row with delete button
+    # Edit form at the top if editing
+    _editing_mand = st.session_state.get('_mand_editing', None)
+    if _editing_mand:
+        _edit_desc_orig = _mand_custom.get(_editing_mand, '')
+        if not _edit_desc_orig:
+            _d, _n, _ = _mand_info(_editing_mand)
+            _edit_desc_orig = f"{_d} ({_n})" if _n else _d
+        st.markdown(f'**✏️ Editing: {_editing_mand}**')
+        _ec1, _ec2, _ec3, _ec4 = st.columns([2, 4, 1, 1])
+        with _ec1:
+            _edit_new_code = st.text_input('Code', value=_editing_mand, key='_mand_edit_code')
+        with _ec2:
+            _edit_new_desc = st.text_input('Description', value=_edit_desc_orig, key='_mand_edit_desc')
+        with _ec3:
+            if st.button('✓ Save', key='_mand_edit_save', type='primary', use_container_width=True):
+                _nc = _edit_new_code.strip().upper()
+                _nd = _edit_new_desc.strip()
+                if _nc:
+                    if _nc != _editing_mand:
+                        st.session_state['_mand_codes_set'].discard(_editing_mand)
+                        st.session_state['_mand_custom_desc'].pop(_editing_mand, None)
+                        st.session_state['_mand_codes_set'].add(_nc)
+                    if _nd:
+                        st.session_state['_mand_custom_desc'][_nc] = _nd
+                _auto_save()
+                st.session_state['_mand_editing'] = None
+                st.rerun()
+        with _ec4:
+            if st.button('Cancel', key='_mand_edit_cancel', use_container_width=True):
+                st.session_state['_mand_editing'] = None
+                st.rerun()
+        st.divider()
+
+    # Helper to render a code row with edit and delete buttons
     def _render_mand_row(code, desc):
-        _cc1, _cc2 = st.columns([8, 1])
+        _cc1, _cc2, _cc3 = st.columns([8, 1, 1])
         _cc1.markdown(f'<span style="font-size:17px"><b style="color:#2a7ab5">{code}</b>&nbsp; {desc}</span>', unsafe_allow_html=True)
-        if _cc2.button('×', key=f'_mand_dlg_del_{code}'):
+        if _cc2.button('✎', key=f'_mand_dlg_edit_{code}'):
+            st.session_state['_mand_editing'] = code
+            st.rerun()
+        if _cc3.button('×', key=f'_mand_dlg_del_{code}'):
             st.session_state['_mand_codes_set'].discard(code)
             st.session_state['_mand_custom_desc'].pop(code, None)
+            _auto_save()
             st.rerun()
 
     # Categorize codes using _mand_info category
@@ -3796,6 +4031,12 @@ def main():
         mtime_key = f'v10,{folder.name},' + ','.join(f'{p.name}:{p.stat().st_mtime}' for p in file_paths)
         sam_maps_by_month[yyyymm] = _cached_sam_map(str(folder), mtime_key)
 
+    # ── Load persistent data from GitHub (once per session) ──────────────────
+    if not st.session_state.get('_persistent_loaded'):
+        _pdata = _load_persistent_data()
+        if _pdata:
+            _apply_persistent_data(_pdata)
+
     # ── Mandatory codes (dynamic, stored in session state) ──────────────────
     if '_mand_codes_set' not in st.session_state:
         st.session_state['_mand_codes_set'] = set(MANDATORY_CODES.keys())
@@ -3904,6 +4145,7 @@ def main():
                 st.session_state['_except_codes_set'].add(_nc)
                 if _new_desc.strip():
                     st.session_state['_except_custom_desc'][_nc] = _new_desc.strip()
+                _auto_save()
                 st.rerun()
 
         # Production Date section removed from sidebar (exists in main area)
