@@ -2827,11 +2827,9 @@ def show_exception_codes():
                         st.session_state['_except_custom_desc'][_nc] = _nd
                 _auto_save()
                 st.session_state['_exc_editing'] = None
-                st.rerun()
         with _ec4:
             if st.button('Cancel', key='_exc_edit_cancel', use_container_width=True):
                 st.session_state['_exc_editing'] = None
-                st.rerun()
         st.divider()
 
     # Scrollable code list
@@ -2847,7 +2845,6 @@ def show_exception_codes():
                         _cc1.markdown(f'<span style="font-size:17px"><b style="color:#2a7ab5">{code}</b>&nbsp; {desc}</span>', unsafe_allow_html=True)
                         if _cc2.button('✎', key=f'_exc_dlg_edit_{code}'):
                             st.session_state['_exc_editing'] = code
-                            st.rerun()
                         if _cc3.button('×', key=f'_exc_dlg_del_{code}'):
                             st.session_state['_except_codes_set'].discard(code)
                             st.session_state['_except_custom_desc'].pop(code, None)
@@ -2973,11 +2970,9 @@ def show_all_codes():
                         st.session_state['_allcode_custom_desc'] = _custom_desc
                     _auto_save()
                     st.session_state['_allcode_editing'] = None
-                    st.rerun()
             with _ec4:
                 if st.button('Cancel', key='_allcode_edit_cancel', use_container_width=True):
                     st.session_state['_allcode_editing'] = None
-                    st.rerun()
             st.divider()
 
         for i in range(0, len(_all), 3):
@@ -2990,7 +2985,6 @@ def show_all_codes():
                         _cc1.markdown(f'<span style="font-size:17px"><b style="color:#2a7ab5">{code}</b>&nbsp; {desc}</span>', unsafe_allow_html=True)
                         if _cc2.button('✎', key=f'_allcode_dlg_edit_{code}'):
                             st.session_state['_allcode_editing'] = code
-                            st.rerun()
                         if _cc3.button('×', key=f'_allcode_dlg_del_{code}'):
                             # Track which lists had this code for undo
                             _was_in_mand = code in st.session_state.get('_mand_codes_set', set())
@@ -3079,11 +3073,9 @@ def show_mandatory_codes():
                         st.session_state['_mand_custom_desc'][_nc] = _nd
                 _auto_save()
                 st.session_state['_mand_editing'] = None
-                st.rerun()
         with _ec4:
             if st.button('Cancel', key='_mand_edit_cancel', use_container_width=True):
                 st.session_state['_mand_editing'] = None
-                st.rerun()
         st.divider()
 
     # Helper to render a code row with edit and delete buttons
@@ -3092,7 +3084,6 @@ def show_mandatory_codes():
         _cc1.markdown(f'<span style="font-size:17px"><b style="color:#2a7ab5">{code}</b>&nbsp; {desc}</span>', unsafe_allow_html=True)
         if _cc2.button('✎', key=f'_mand_dlg_edit_{code}'):
             st.session_state['_mand_editing'] = code
-            st.rerun()
         if _cc3.button('×', key=f'_mand_dlg_del_{code}'):
             st.session_state['_mand_codes_set'].discard(code)
             st.session_state['_mand_custom_desc'].pop(code, None)
