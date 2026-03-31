@@ -2419,7 +2419,7 @@ def _lookup_code(code: str) -> str:
 
 @st.dialog("Option Code Details", width="large")
 def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_str: str = "",
-                      all_wings_str: str = "", all_sam_str: str = ""):
+                      all_wings_str: str = "", all_sam_str: str = "", vehicle_row: dict = None):
     st.markdown("""<style>
     [data-testid="stDialog"] [data-testid="stMarkdownContainer"] { font-size: 17px; }
     [data-testid="stDialog"] h4 { font-size: 22px !important; }
@@ -2427,7 +2427,50 @@ def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_s
     [data-testid="stDialog"] .stTabs button p { font-size: 17px !important; }
     [data-testid="stDialog"] [data-testid="stDialogTitle"] { font-size: 28px !important; }
     </style>""", unsafe_allow_html=True)
-    st.markdown(f"<span style='font-size:19px'><b>Commission No.:</b>&nbsp; <code style='font-size:19px;color:#2a7ab5'>{commission_no}</code></span>", unsafe_allow_html=True)
+
+    # ── Commission No. + vehicle info row ──
+    hdr_col, dl_col = st.columns([5, 1])
+    with hdr_col:
+        st.markdown(f"<span style='font-size:19px'><b>Commission No.:</b>&nbsp; <code style='font-size:19px;color:#2a7ab5'>{commission_no}</code></span>", unsafe_allow_html=True)
+    if vehicle_row:
+        with dl_col:
+            _row_df = pd.DataFrame([{k: v for k, v in vehicle_row.items() if not str(k).startswith('_')}])
+            st.download_button(
+                "📥 Excel",
+                data=to_excel_bytes(_row_df),
+                file_name=f"vehicle_{commission_no}.xlsx",
+                key=f"dl_row_{commission_no}",
+                use_container_width=True,
+            )
+
+    # Vehicle info block
+    if vehicle_row:
+        _vr = vehicle_row
+        def _vget(key, *fallbacks):
+            for k in (key, *fallbacks):
+                v = str(_vr.get(k, "") or "").strip()
+                if v and v not in ("nan", "NaT", "None"):
+                    return v
+            return "—"
+        _info_items = [
+            ("MY",           _vget("MY", "Production date")),
+            ("Vehicle",      _vget("Vehicle")),
+            ("Gen.",         _vget("Model(WINGS)", "Gen.")),
+            ("Model",        _vget("Model(SAM)", "Baumuster")),
+            ("Type",         _vget("Type")),
+            ("Cab",          _vget("Cab")),
+            ("Option/PTO",   _vget("PTO", "Option")),
+            ("Baumuster",    _vget("Baumuster")),
+            ("Changeability",_vget("Changeability Date")),
+        ]
+        _cells = "".join(
+            f"<div style='display:inline-block;margin:3px 6px 3px 0;padding:3px 10px;background:#f0f4fa;border-radius:5px;font-size:13px;'>"
+            f"<span style='color:#888;font-weight:600'>{label}</span>&nbsp;"
+            f"<span style='color:#1a2a4a;font-weight:700'>{val}</span></div>"
+            for label, val in _info_items if val != "—"
+        )
+        st.markdown(f"<div style='margin:4px 0 8px 0'>{_cells}</div>", unsafe_allow_html=True)
+
     st.divider()
 
     _mand_set = st.session_state.get('_mand_codes_set', set(MANDATORY_CODES.keys()))
@@ -4358,6 +4401,7 @@ def main():
                     str(row.get("Factory Control Codes", "")),
                     str(row.get("_all_wings_codes", "")),
                     str(row.get("_all_sam_codes", "")),
+                    vehicle_row=row.to_dict(),
                 )
             st.download_button(
                 f'📥 {dl_label}',
