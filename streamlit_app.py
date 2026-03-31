@@ -2456,7 +2456,8 @@ def show_code_details(commission_no: str, sam_str: str, wings_str: str, except_s
             ("MY",           _vget("MY", "Production date")),
             ("Vehicle",      _vget("Vehicle")),
             ("Gen.",         _vget("Model(WINGS)", "Gen.")),
-            ("Model",        _vget("Model(SAM)", "Baumuster")),
+            ("Prev. Model(SAM)", _vget("Previous Model(SAM)", "Baumuster")),
+            ("Curr. Model(SAM)", _vget("Current Model(SAM)")),
             ("Type",         _vget("Type")),
             ("Cab",          _vget("Cab")),
             ("Option/PTO",   _vget("PTO", "Option")),
@@ -3679,7 +3680,8 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
             'Type': _axle_type,
             'Cab': _cab_code,
             'PTO': _pto_flag,
-            'Model(SAM)': re.sub(r'4453|4153|3343|2853|2851', lambda m: {'4453':'4153','4153':'3253','3343':'2643','2853':'2653','2851':'2651'}[m.group()], re.sub(r'DNA$', '', re.sub(r'[^A-Z0-9]', '', str(r.get('Model') or r.get('Baumuster') or model_raw).upper().strip()))),
+            'Previous Model(SAM)': re.sub(r'4453|4153|3343|2853|2851', lambda m: {'4453':'4153','4153':'3253','3343':'2643','2853':'2663','2851':'2661'}[m.group()], re.sub(r'DNA$', '', re.sub(r'[^A-Z0-9]', '', str(r.get('Model') or r.get('Baumuster') or model_raw).upper().strip()))),
+            'Current Model(SAM)': re.sub(r'4453|4153|3343|2853|2851', lambda m: {'4453':'4463','4153':'4163','3343':'3363','2853':'2863','2851':'2861'}[m.group()], re.sub(r'DNA$', '', re.sub(r'[^A-Z0-9]', '', str(r.get('Model') or r.get('Baumuster') or model_raw).upper().strip()))),
             'Changeability Date': '',
             'Until Dealine': '',
             'Production date': r.get('Requested delivery date', '') if 'Requested delivery date' in r.index else '',
@@ -3759,7 +3761,7 @@ def to_excel_bytes(df: pd.DataFrame) -> bytes:
     towrite = io.BytesIO()
     with pd.ExcelWriter(towrite, engine='openpyxl') as writer:
         # Select key columns for output in desired order
-        output_cols = ['Commission no.', 'Baumuster', 'Model(WINGS)', 'Vehicle', 'Type', 'Cab', 'PTO', 'Model(SAM)', 'Changeability Date',
+        output_cols = ['Commission no.', 'Baumuster', 'Model(WINGS)', 'Vehicle', 'Type', 'Cab', 'PTO', 'Previous Model(SAM)', 'Current Model(SAM)', 'Changeability Date',
                        'Until Dealine', 'Production date', 'Only_in_SAM', 'Only_in_WINGS', 'Factory Control Codes',
                        'Order status financial', 'Order status logistical', 'Gross equipment price (repricing)',
                        'Additional equipment (enumeration)', 'FIN', 'Subcategory (ID)',
@@ -4314,7 +4316,7 @@ def main():
 
         # ── Prepare data splits ──────────────────────────────────────────────
         cols_table = ['Commission no.', 'Baumuster', 'Until Dealine', 'Changeability Date',
-                      'Production date', 'Vehicle', 'Model(WINGS)', 'Type', 'Cab', 'PTO', 'Model(SAM)', 'Only_in_SAM', 'Only_in_WINGS', 'Mandatory Codes', 'Factory Control Codes', 'Compared SAM file name', 'SAM Status']
+                      'Production date', 'Vehicle', 'Model(WINGS)', 'Type', 'Cab', 'PTO', 'Previous Model(SAM)', 'Current Model(SAM)', 'Only_in_SAM', 'Only_in_WINGS', 'Mandatory Codes', 'Factory Control Codes', 'Compared SAM file name', 'SAM Status']
         _hidden_cols = ['_all_wings_codes', '_all_sam_codes']
 
         # Sort by Production date (earlier months first), then by Until Dealine
