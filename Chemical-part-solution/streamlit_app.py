@@ -543,8 +543,7 @@ cas_hs_match_count = has_both["HS Code"].nunique()
 st.markdown(f"""
 <div class="stats-row">
     <div class="stat-box"><p class="num">{len(cas_total):,}</p><p class="lbl">CAS 물질 (전체)</p></div>
-    <div class="stat-box"><p class="num">{len(hs_total):,}</p><p class="lbl">HS 수입요령 (전체)</p></div>
-    <div class="stat-box"><p class="num">{has_hs["HS Code"].nunique():,}</p><p class="lbl">HS 코드 (고유)</p></div>
+    <div class="stat-box"><p class="num">{len(has_hs):,}</p><p class="lbl">HS 코드</p></div>
     <div class="stat-box"><p class="num">{cas_hs_match_count:,}</p><p class="lbl">CAS-HS 매칭</p></div>
     <div class="stat-box"><p class="num">{len(has_law):,}</p><p class="lbl">법령 매칭</p></div>
 </div>
