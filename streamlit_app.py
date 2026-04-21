@@ -3338,7 +3338,7 @@ def _normalize_model(model: str) -> str:
         '2851': '2651',
         '2135': '1835',
         '2863': '2663',
-        '2853': '2663',  # 2853 LS shares SAM files with 2863 LS
+        '2853': '2653',
     }
     for old, new in historic.items():
         if cleaned.startswith(old):
@@ -3622,6 +3622,14 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
                 if k_norm == model_norm or (num_k == num_norm and suf_k == suf_norm):
                     sam_entry = v
                     break
+
+        # Fallback for 2853 LS: if no 2653LS SAM found, try 2663LS (2863 LS SAM files)
+        _probe_codes2, _ = _get_sam_data(sam_entry, is_pto)
+        if not _probe_codes2 and model_norm == '2653LS' and sam_maps_list:
+            _fallback_entry = sam_maps_list[0].get('2663LS', {})
+            if _fallback_entry:
+                sam_entry = _fallback_entry
+                sam_map = sam_maps_list[0]
 
         # Refine PTO detection: if both PTO/non-PTO SAM variants exist,
         # check whether WINGS contains any code that only appears in the PTO SAM file.
