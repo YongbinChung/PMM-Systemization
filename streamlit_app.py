@@ -4087,11 +4087,12 @@ def main():
     if not month_folders:
         month_folders = [sam_base]
 
-    _SAM_CACHE_VER = 'v3'  # bump to invalidate cache when alias logic changes
+    _SAM_CACHE_VER = 'v4'  # bump to invalidate cache when alias logic changes
 
     @st.cache_data(show_spinner=False)
     def _cached_sam_map(folder_str: str, mtime_key: str, _ver: str = _SAM_CACHE_VER) -> dict:
         _ = mtime_key
+        _ = _ver
         return load_sam_from_folder(Path(folder_str))
 
     valid_exts = {'.docx', '.csv', '.txt'}
@@ -4107,8 +4108,8 @@ def main():
         if not file_paths:
             continue  # skip empty folders so comparison falls back to nearest month with data
         all_sam_file_paths.extend(file_paths)
-        mtime_key = f'v10,{folder.name},' + ','.join(f'{p.name}:{p.stat().st_mtime}' for p in file_paths)
-        sam_maps_by_month[yyyymm] = _cached_sam_map(str(folder), mtime_key)
+        mtime_key = f'{_SAM_CACHE_VER},{folder.name},' + ','.join(f'{p.name}:{p.stat().st_mtime}' for p in file_paths)
+        sam_maps_by_month[yyyymm] = _cached_sam_map(str(folder), mtime_key, _SAM_CACHE_VER)
 
     # ── Load persistent data from GitHub (once per session) ──────────────────
     if not st.session_state.get('_persistent_loaded'):
