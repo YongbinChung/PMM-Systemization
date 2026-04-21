@@ -3560,13 +3560,13 @@ def compare(df_wings: pd.DataFrame, sam_maps_by_month: dict) -> pd.DataFrame:
         wings_codes = set(r['WINGS_codes'] or [])
         model_norm = _normalize_model(model_raw)
 
-        # Initial PTO detection: OPTION_CODE_MAP + user custom descriptions
+        # Initial PTO detection: OPTION_CODE_MAP + user custom descriptions + WINGS_has_pto flag
         _allcode_custom = st.session_state.get('_allcode_custom_desc', {})
         is_pto = any(
             'PTO' in OPTION_CODE_MAP.get(c, '').upper() or
             'PTO' in _allcode_custom.get(c, '').upper()
             for c in wings_codes
-        )
+        ) or bool(r.get('WINGS_has_pto', False))
 
         def _split_model(s: str):
             # split into leading digits and trailing letters e.g. '3253K' -> ('3253', 'K')
@@ -4087,7 +4087,7 @@ def main():
     if not month_folders:
         month_folders = [sam_base]
 
-    _SAM_CACHE_VER = 'v2'  # bump to invalidate cache when alias logic changes
+    _SAM_CACHE_VER = 'v3'  # bump to invalidate cache when alias logic changes
 
     @st.cache_data(show_spinner=False)
     def _cached_sam_map(folder_str: str, mtime_key: str, _ver: str = _SAM_CACHE_VER) -> dict:
