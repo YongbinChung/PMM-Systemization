@@ -3303,7 +3303,7 @@ def parse_wings(file) -> pd.DataFrame:
         df['WINGS_has_pto'] = _all_text.str.contains(r'\bPTO\b', case=False, na=False)
     
     # Return with both Model name and Baumuster number, plus additional columns
-    result_cols = ['Commission no.', model_col, 'WINGS_codes']
+    result_cols = ['Commission no.', model_col, 'WINGS_codes', 'WINGS_has_pto']
     if 'Baumuster' in df.columns and model_col != 'Baumuster':
         result_cols.insert(2, 'Baumuster')
     
