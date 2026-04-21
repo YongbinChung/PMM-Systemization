@@ -19,7 +19,9 @@ st.set_page_config(page_title="화학물질 관리시스템", page_icon="⚗️"
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
 * { font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif !important; }
+.material-symbols-rounded { font-family: 'Material Symbols Rounded' !important; font-size: 20px !important; }
 .block-container { padding-top: 0rem !important; }
 header[data-testid="stHeader"] { background: transparent !important; height: 2rem !important; }
 .stApp { background-color: #f4f6f9; }
@@ -67,11 +69,20 @@ section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !impo
 .stDownloadButton > button { background:#1a8754 !important; color:#fff !important; border:none !important; border-radius:6px !important; font-weight:600 !important; }
 .stTabs [data-baseweb="tab"] { background:#e8ecf1; border-radius:8px 8px 0 0; padding:0.5rem 1.5rem; font-weight:600; color:#002060; }
 .stTabs [aria-selected="true"] { background:#002060 !important; color:#fff !important; }
-/* Hide material icon text in expanders (arrow_right bug) */
-.streamlit-expanderHeader span[data-testid="stMarkdownContainer"] .material-symbols-rounded,
+/* Hide arrow_right material icon in expanders */
 [data-testid="stExpander"] summary span.material-symbols-rounded,
-[data-testid="stExpander"] details summary svg + span { font-size: 0 !important; }
-/* Force hide any arrow_right / keyboard_double text artifacts */
+[data-testid="stExpander"] summary span[data-testid="stExpanderToggleIcon"],
+[data-testid="stExpander"] details summary svg,
+[data-testid="stExpander"] details summary svg + span,
+[data-testid="stExpander"] details summary > div:first-child,
+.streamlit-expanderHeader .material-symbols-rounded,
+details[data-testid="stExpander"] summary > span:first-child {
+    display: none !important;
+    font-size: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+}
+/* Force hide sidebar collapse button */
 [data-testid="stSidebarCollapseButton"],
 [data-testid="collapsedControl"] { display: none !important; visibility: hidden !important; }
 </style>
@@ -538,7 +549,7 @@ hs_total = load_hs()
 has_hs = master[master["HS Code"] != ""]
 has_law = master[master["관련법령"] != ""]
 has_both = master[(master["CAS No"] != "") & (master["HS Code"] != "")]
-cas_hs_match_count = has_both["HS Code"].nunique()
+cas_hs_match_count = len(has_both)
 
 st.markdown(f"""
 <div class="stats-row">
