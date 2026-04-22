@@ -3824,6 +3824,7 @@ def to_excel_bytes(df: pd.DataFrame) -> bytes:
 
 def main():
     st.set_page_config(page_title='AFAB vs SAM Comparison', layout='wide')
+    st.sidebar.caption('🔧 deploy-check: 2026-04-22-v6')
 
     # ── Global CSS ────────────────────────────────────────────────────────────
     st.markdown("""
